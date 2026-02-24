@@ -1,0 +1,7 @@
+{
+  "tool_name": "raster_math",
+  "library": "rasterio",
+  "data_type_input": "raster",
+  "data_type_output": "raster",
+  "description": "Perform mathematical operations between rasters."
+}

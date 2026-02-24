@@ -1,0 +1,10 @@
+{
+  "tool_name": "overlay",
+  "library": "geopandas",
+  "data_type_input": "vector",
+  "data_type_output": "vector",
+  "description": "Perform spatial overlay between two vector layers.",
+  "parameters": {
+    "how": "intersection | union | difference"
+  }
+}   

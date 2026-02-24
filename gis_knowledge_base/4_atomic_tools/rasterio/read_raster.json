@@ -1,0 +1,6 @@
+{
+  "tool_name": "read_raster",
+  "library": "rasterio",
+  "data_type_output": "raster",
+  "description": "Read raster file from disk."
+}

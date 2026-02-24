@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navi Mumbai EV Charging Suitability Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        #map {
+            height: 100vh;
+        }
+        .popup-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+    // Initialize Map centered at Navi Mumbai
+    var map = L.map('map').setView([19.0330, 73.0297], 12);
+
+    // OpenStreetMap Layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Dummy GIS Engine Output
+    var evLocations = [
+        {
+            lat: 19.0330,
+            lng: 73.0297,
+            score: 0.87,
+            reason: "Near major road + commercial zone + low slope"
+        },
+        {
+            lat: 19.0435,
+            lng: 73.0212,
+            score: 0.81,
+            reason: "Close to highway + high residential density"
+        },
+        {
+            lat: 19.0550,
+            lng: 73.0150,
+            score: 0.75,
+            reason: "Moderate traffic + open land availability"
+        }
+    ];
+
+    // Function to determine marker color
+    function getColor(score) {
+        if (score > 0.85) return "green";
+        if (score > 0.78) return "orange";
+        return "red";
+    }
+
+    // Add markers
+    evLocations.forEach(function(location) {
+
+        var marker = L.circleMarker([location.lat, location.lng], {
+            radius: 10,
+            fillColor: getColor(location.score),
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(map);
+
+        marker.bindPopup(
+            "<div class='popup-title'>EV Charging Recommended</div>" +
+            "<b>Suitability Score:</b> " + location.score + "<br>" +
+            "<b>Reason:</b> " + location.reason
+        );
+    });
+
+</script>
+
+</body>
+</html>

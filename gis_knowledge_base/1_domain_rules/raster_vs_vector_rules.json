@@ -1,0 +1,10 @@
+{
+  "concept": "Raster and Vector Data Separation",
+  "rules": [
+    "Raster data cannot be directly used in vector overlay operations.",
+    "Vector overlay operations require two vector layers.",
+    "Raster operations require consistent resolution and CRS.",
+    "Before combining rasters, ensure same projection and cell size.",
+    "Distance analysis for suitability should generate raster outputs."
+  ]
+}

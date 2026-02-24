@@ -1,0 +1,7 @@
+{
+  "tool_name": "Slope",
+  "library": "whitebox",
+  "data_type_input": "raster",
+  "data_type_output": "raster",
+  "description": "Compute slope raster from DEM."
+}

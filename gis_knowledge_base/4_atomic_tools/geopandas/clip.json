@@ -1,0 +1,7 @@
+{
+  "tool_name": "clip",
+  "library": "geopandas",
+  "data_type_input": "vector",
+  "data_type_output": "vector",
+  "description": "Clip vector layer to boundary geometry."
+}

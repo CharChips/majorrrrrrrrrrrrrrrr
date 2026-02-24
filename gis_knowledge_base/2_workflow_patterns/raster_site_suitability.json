@@ -1,0 +1,24 @@
+{
+  "workflow_type": "Multi-Criteria Site Suitability",
+  "paradigm": "raster_based",
+  "required_steps": [
+    "criterion_layer_generation",
+    "normalization",
+    "weight_assignment",
+    "weighted_overlay",
+    "candidate_extraction"
+  ],
+  "recommended_tools": [
+    "FetchDEM",
+    "Slope",
+    "DistanceRaster",
+    "NormalizeRaster",
+    "WeightedOverlay",
+    "ExtractTopLocations"
+  ],
+  "constraints": [
+    "All intermediate layers must be raster.",
+    "Ensure CRS alignment before raster math.",
+    "Use weighted linear combination for final aggregation."
+  ]
+}

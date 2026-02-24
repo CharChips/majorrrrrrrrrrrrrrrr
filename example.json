@@ -1,0 +1,110 @@
+{
+    "workflow_name": "EV_Charging_Station_Site_Suitability_Navi_Mumbai",
+    "workflow_type": "Multi-Criteria Site Suitability Analysis",
+    "steps": [
+        {
+            "step_id": 1,
+            "tool": "buffer",
+            "inputs": {
+                "Vector": "Roads_Navi_Mumbai"
+            },
+            "parameters": {
+                "distance": 500.0
+            },
+            "outputs": {
+                "Vector": "Road_Buffer_500m"
+            }
+        },
+        {
+            "step_id": 2,
+            "tool": "buffer",
+            "inputs": {
+                "Vector": "Existing_EV_Stations_Navi_Mumbai"
+            },
+            "parameters": {
+                "distance": 1000.0
+            },
+            "outputs": {
+                "Vector": "Existing_Station_Exclusion_Buffer_1km"
+            }
+        },
+        {
+            "step_id": 3,
+            "tool": "Slope",
+            "inputs": {
+                "DEM_raster": "DEM_Navi_Mumbai"
+            },
+            "parameters": {},
+            "outputs": {
+                "Slope_raster": "Slope_Degrees_Navi_Mumbai"
+            }
+        },
+        {
+            "step_id": 4,
+            "tool": "buffer",
+            "inputs": {
+                "Vector": "Commercial_Landuse_Navi_Mumbai"
+            },
+            "parameters": {
+                "distance": 200.0
+            },
+            "outputs": {
+                "Vector": "Commercial_Landuse_Buffer_200m"
+            }
+        },
+        {
+            "step_id": 5,
+            "tool": "overlay",
+            "inputs": {
+                "Vector": [
+                    "Road_Buffer_500m",
+                    "Existing_Station_Exclusion_Buffer_1km"
+                ],
+                "how": "difference"
+            },
+            "parameters": {},
+            "outputs": {
+                "Vector": "Road_Buffer_Exclusion_Overlay"
+            }
+        },
+        {
+            "step_id": 6,
+            "tool": "overlay",
+            "inputs": {
+                "Vector": [
+                    "Road_Buffer_Exclusion_Overlay",
+                    "Commercial_Landuse_Buffer_200m"
+                ],
+                "how": "intersection"
+            },
+            "parameters": {},
+            "outputs": {
+                "Vector": "Suitable_Commercial_Road_Buffer_Overlay"
+            }
+        },
+        {
+            "step_id": 7,
+            "tool": "overlay",
+            "inputs": {
+                "Vector": [
+                    "Suitable_Commercial_Road_Buffer_Overlay",
+                    "Slope_Degrees_Navi_Mumbai"
+                ],
+                "how": "intersection"
+            },
+            "parameters": {},
+            "outputs": {
+                "Vector": "Final_Site_Suitability_Overlay"
+            }
+        },
+        {
+            "step_id": 8,
+            "tool": "None",
+            "inputs": {},
+            "parameters": {},
+            "outputs": {
+                "Vector": "EV_Charging_Station_Locations_Navi_Mumbai"
+            }
+        }
+    ]
+}

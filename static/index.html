@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EV Suitability Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        #map { height: 100vh; }
+        button {
+            position: absolute;
+            z-index: 1000;
+            top: 10px;
+            left: 10px;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="runAnalysis()">Run EV Analysis</button>
+
+<div id="map"></div>
+
+<script>
+
+var map = L.map('map').setView([19.0330, 73.0297], 12);
+
+var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var demLayer;
+var evLayer = L.layerGroup().addTo(map);
+
+function runAnalysis() {
+
+    fetch("/run-analysis")
+    .then(res => res.json())
+    .then(data => {
+
+        evLayer.clearLayers();
+
+        data.forEach(loc => {
+            L.circleMarker([loc.latitude, loc.longitude], {
+                radius: 8,
+                fillColor: "green",
+                color: "#000",
+                fillOpacity: 0.8
+            })
+            .bindPopup("Score: " + loc.score.toFixed(2))
+            .addTo(evLayer);
+        });
+    });
+
+    addDEM();
+}
+
+function addDEM() {
+
+    if (demLayer) {
+        map.removeLayer(demLayer);
+    }
+
+    demLayer = L.tileLayer.wms("/dem", {
+        format: 'image/png',
+        transparent: true
+    });
+
+}
+
+</script>
+
+</body>
+</html>

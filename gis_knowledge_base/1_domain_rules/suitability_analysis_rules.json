@@ -1,0 +1,11 @@
+{
+  "concept": "Multi-Criteria Site Suitability",
+  "rules": [
+    "All criteria must be converted to raster format.",
+    "Each criterion must be normalized to a common scale (0 to 1).",
+    "Use weighted linear combination for final suitability score.",
+    "Higher suitability values represent better candidate locations.",
+    "Final raster should be post-processed to extract candidate points.",
+    "Avoid overlapping with existing infrastructure where required."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "tool_name": "reproject",
+  "library": "rasterio",
+  "data_type_input": "raster",
+  "data_type_output": "raster",
+  "description": "Reproject raster to target CRS."
+}

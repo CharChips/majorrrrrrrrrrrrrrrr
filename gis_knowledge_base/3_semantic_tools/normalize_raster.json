@@ -1,0 +1,13 @@
+{
+  "tool_name": "NormalizeRaster",
+  "category": "raster_processing",
+  "data_type_input": "raster",
+  "data_type_output": "raster",
+  "description": "Scale raster values to 0–1 range using min-max normalization.",
+  "inputs": {
+    "input_raster": "raster"
+  },
+  "outputs": {
+    "normalized_raster": "raster"
+  }
+}

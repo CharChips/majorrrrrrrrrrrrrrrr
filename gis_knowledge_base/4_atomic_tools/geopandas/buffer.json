@@ -1,0 +1,10 @@
+{
+  "tool_name": "buffer",
+  "library": "geopandas",
+  "data_type_input": "vector",
+  "data_type_output": "vector",
+  "description": "Create buffer polygon around vector features.",
+  "parameters": {
+    "distance": "float"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "tool_name": "WeightedOverlay",
+  "category": "multi_criteria_analysis",
+  "data_type_input": "raster_list",
+  "data_type_output": "raster",
+  "description": "Combine multiple normalized rasters using weighted linear combination.",
+  "inputs": {
+    "raster_layers": "list_of_rasters"
+  },
+  "parameters": {
+    "weights": "dictionary_of_weights"
+  },
+  "outputs": {
+    "suitability_raster": "raster"
+  }
+}

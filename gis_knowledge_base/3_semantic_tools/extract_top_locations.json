@@ -1,0 +1,13 @@
+{
+  "tool_name": "ExtractTopLocations",
+  "category": "post_processing",
+  "data_type_input": "raster",
+  "data_type_output": "vector_points",
+  "description": "Extract top N highest scoring pixels from suitability raster and convert to geographic coordinates.",
+  "parameters": {
+    "count": "integer"
+  },
+  "outputs": {
+    "candidate_locations": "vector_points"
+  }
+}

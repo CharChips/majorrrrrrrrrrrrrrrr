@@ -1,0 +1,7 @@
+{
+  "tool_name": "gdalwarp",
+  "library": "gdal",
+  "data_type_input": "raster",
+  "data_type_output": "raster",
+  "description": "Reproject or resample raster."
+}

@@ -1,0 +1,12 @@
+{
+  "tool_name": "DistanceRaster",
+  "category": "raster_analysis",
+  "data_type_output": "raster",
+  "description": "Generate a raster where each pixel represents distance from nearest feature in vector layer.",
+  "inputs": {
+    "vector_layer": "vector"
+  },
+  "outputs": {
+    "distance_raster": "raster"
+  }
+}
