@@ -1,78 +1,509 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>EV Suitability Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoSmart AI</title>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <!-- Leaflet Draw CSS & JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
     <style>
-        #map { height: 100vh; }
-        button {
-            position: absolute;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        #sidebar {
+            width: 350px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
             z-index: 1000;
-            top: 10px;
-            left: 10px;
-            padding: 8px 12px;
+        }
+
+        #header {
+            padding: 20px;
+            background-color: white;
+            /* Changed to white */
+            color: #6a5acd;
+            /* Changed to purple */
+            text-align: center;
+            font-size: 28px;
+            /* Increased font size */
+            font-weight: bold;
+            border-bottom: 2px solid #eee;
+            /* Added border */
+        }
+
+        #location-picker {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .panel-box {
+            border: 2px solid #8e7cc3;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            background-color: white;
+        }
+
+        #location-picker .panel-title {
+            color: #6a5acd;
+            font-size: 24px;
+            font-weight: normal;
+            margin-bottom: 15px;
+        }
+
+        #district-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        #location-picker input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 10px;
+            border: 2px solid #8e7cc3;
+            border-radius: 15px;
+            background-color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #chat-title-overlay {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            text-align: center;
+            color: #6a5acd;
+            font-size: 32px;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        #chat-history {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .bot-message {
+            background-color: #f1f3f4;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+            border-left: 3px solid #6a5acd;
+        }
+
+        #chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            background-color: white;
+            z-index: 1;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #5a4bcf;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-yes {
+            background-color: #4CAF50;
+        }
+
+        .btn-yes:hover {
+            background-color: #45a049;
+        }
+
+        .btn-no {
+            background-color: #f44336;
+        }
+
+        .btn-no:hover {
+            background-color: #da190b;
+        }
+
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .loading {
+            font-style: italic;
+            color: #666;
         }
     </style>
 </head>
+
 <body>
 
-<button onclick="runAnalysis()">Run EV Analysis</button>
+    <div id="sidebar">
+        <div id="header">GeoSmart AI</div>
 
-<div id="map"></div>
+        <div id="location-picker">
+            <div class="panel-box" style="width: 100%; box-sizing: border-box; margin: 0;">
+                <div class="panel-title">location<br>picker</div>
 
-<script>
+                <select id="district-select" onchange="zoomToDistrict()">
+                    <option value="Navi Mumbai, Maharashtra, India|19.0330|73.0297">Navi Mumbai</option>
+                    <option value="Mumbai, Maharashtra, India|19.0760|72.8777">Mumbai</option>
+                    <option value="Thane, Maharashtra, India|19.2183|72.9781">Thane</option>
+                    <option value="Pune, Maharashtra, India|18.5204|73.8567">Pune</option>
+                    <option value="Nagpur, Maharashtra, India|21.1458|79.0882">Nagpur</option>
+                    <option value="New Delhi, Delhi, India|28.6139|77.2090">New Delhi</option>
+                    <option value="Bengaluru, Karnataka, India|12.9716|77.5946">Bengaluru</option>
+                    <option value="">-- Custom AOI --</option>
+                </select>
 
-var map = L.map('map').setView([19.0330, 73.0297], 12);
+                <input type="text" id="location" value="Navi Mumbai, Maharashtra, India">
+            </div>
+        </div>
 
-var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
+        <div id="chat-container">
+            <div id="chat-title-overlay">Chatbot</div>
+            <div id="chat-history"></div>
 
-var demLayer;
-var evLayer = L.layerGroup().addTo(map);
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type a query..." onkeypress="handleKeyPress(event)">
+                <button class="btn" onclick="sendQuery()">Send</button>
+            </div>
+        </div>
+    </div>
 
-function runAnalysis() {
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
 
-    fetch("/run-analysis")
-    .then(res => res.json())
-    .then(data => {
+    <script>
+        var map = L.map('map').setView([19.0330, 73.0297], 12);
 
-        evLayer.clearLayers();
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-        data.forEach(loc => {
-            L.circleMarker([loc.latitude, loc.longitude], {
-                radius: 8,
-                fillColor: "green",
-                color: "#000",
-                fillOpacity: 0.8
-            })
-            .bindPopup("Score: " + loc.score.toFixed(2))
-            .addTo(evLayer);
+        // --- Leaflet Draw Initialization ---
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            },
+            draw: {
+                polygon: true,
+                polyline: false,
+                rectangle: true,
+                circle: false,
+                marker: true,
+                circlemarker: false
+            }
         });
-    });
+        map.addControl(drawControl);
 
-    addDEM();
-}
+        // Capture drawn shapes
+        map.on(L.Draw.Event.CREATED, function (event) {
+            var layer = event.layer;
+            drawnItems.clearLayers(); // Clear previous drawings
+            drawnItems.addLayer(layer);
 
-function addDEM() {
+            document.getElementById('location').value = "Custom AOI Polygon";
+            document.getElementById('district-select').value = ""; // Set dropdown to Custom AOI
+        });
 
-    if (demLayer) {
-        map.removeLayer(demLayer);
-    }
+        function zoomToDistrict() {
+            var select = document.getElementById('district-select');
+            var val = select.value;
 
-    demLayer = L.tileLayer.wms("/dem", {
-        format: 'image/png',
-        transparent: true
-    });
+            if (!val) return; // User selected "-- Custom AOI --", do nothing
 
-}
+            var parts = val.split('|');
+            var placeName = parts[0];
+            var lat = parseFloat(parts[1]);
+            var lng = parseFloat(parts[2]);
 
-</script>
+            document.getElementById('location').value = placeName;
+            map.flyTo([lat, lng], 11);
+
+            drawnItems.clearLayers(); // Clean up custom drawings if district selected
+        }
+        // -----------------------------------
+
+        var demLayer;
+        var evLayer = L.layerGroup().addTo(map);
+        var currentWorkflow = null;
+
+        function hideChatOverlay() {
+            const overlay = document.getElementById('chat-title-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+            }
+        }
+
+        function addMessage(text, isUser, isHtml = false) {
+            hideChatOverlay();
+
+            const history = document.getElementById('chat-history');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ' + (isUser ? 'user-message' : 'bot-message');
+
+            if (isHtml) {
+                msgDiv.innerHTML = text;
+            } else {
+                msgDiv.textContent = text;
+            }
+
+            history.appendChild(msgDiv);
+            history.scrollTop = history.scrollHeight;
+            return msgDiv;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendQuery();
+            }
+        }
+
+        async function sendQuery() {
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            input.value = '';
+            addMessage(query, true);
+
+            const loadingMsg = addMessage("Thinking... generating workflow...", false);
+            loadingMsg.classList.add('loading');
+
+            try {
+                const response = await fetch('/generate-workflow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                loadingMsg.remove();
+
+                if (data.status === 'success') {
+                    currentWorkflow = data.workflow;
+
+                    if (data.workflow.reasoning) {
+                        const reasoningHtml = `
+                    <strong>GIS Expert Analysis:</strong><br><br>
+                    ${data.workflow.reasoning}
+                `;
+                        addMessage(reasoningHtml, false, true);
+                    }
+
+                    const promptHtml = `
+                Workflow generated successfully! Do you want to proceed with the analysis?
+                <div class="action-btns">
+                    <button class="btn btn-yes" onclick="proceedAnalysis(true)">Yes</button>
+                    <button class="btn btn-no" onclick="proceedAnalysis(false)">No</button>
+                </div>
+            `;
+                    addMessage(promptHtml, false, true);
+                } else {
+                    addMessage("Error: Could not generate workflow.", false);
+                }
+            } catch (e) {
+                loadingMsg.remove();
+                addMessage("Error connecting to server.", false);
+                console.error(e);
+            }
+        }
+
+        async function proceedAnalysis(proceed) {
+            const buttons = document.querySelectorAll('.action-btns');
+            buttons.forEach(b => b.remove());
+
+            if (!proceed) {
+                addMessage("Analysis cancelled.", false);
+                return;
+            }
+
+            addMessage("Yes, proceed.", true);
+
+            const location = document.getElementById('location').value.trim();
+            if (!location) {
+                addMessage("Please enter a valid location in the location picker.", false);
+                return;
+            }
+
+            const loadingMsg = addMessage("Running GIS analysis... this might take a minute...", false);
+            loadingMsg.classList.add('loading');
+
+            try {
+                let requestBody = { place_name: location };
+
+                if (drawnItems && drawnItems.getLayers().length > 0) {
+                    requestBody.geojson = drawnItems.toGeoJSON();
+                }
+
+                const response = await fetch('/run-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+                loadingMsg.remove();
+
+                if (data && data.length > 0) {
+                    addMessage(`Analysis complete! Found ${data.length} suitable locations. Updating map...`, false);
+                    updateMap(data);
+                } else {
+                    addMessage("Analysis complete, but no suitable locations were found.", false);
+                }
+
+            } catch (e) {
+                loadingMsg.remove();
+                addMessage("Error running analysis.", false);
+                console.error(e);
+            }
+        }
+
+        function updateMap(data) {
+            evLayer.clearLayers();
+
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+
+            data.forEach(loc => {
+                L.circleMarker([loc.latitude, loc.longitude], {
+                    radius: 8,
+                    fillColor: "green",
+                    color: "#000",
+                    fillOpacity: 0.8
+                })
+                    .bindPopup("Score: " + loc.score.toFixed(2))
+                    .addTo(evLayer);
+
+                minLat = Math.min(minLat, loc.latitude);
+                maxLat = Math.max(maxLat, loc.latitude);
+                minLng = Math.min(minLng, loc.longitude);
+                maxLng = Math.max(maxLng, loc.longitude);
+            });
+
+            if (data.length > 0) {
+                map.fitBounds([
+                    [minLat, minLng],
+                    [maxLat, maxLng]
+                ]);
+            }
+
+            addDEM();
+        }
+
+        function addDEM() {
+            if (demLayer) {
+                map.removeLayer(demLayer);
+            }
+            demLayer = L.tileLayer.wms("/dem", {
+                format: 'image/png',
+                transparent: true
+            }).addTo(map);
+        }
+
+        // Ensure overlay fades out if there are already messages (e.g., initial greeting)
+        // addMessage("Hi! I am GeoSmart AI. Tell me what you'd like to analyze.", false);
+
+    </script>
 
 </body>
+
 </html>

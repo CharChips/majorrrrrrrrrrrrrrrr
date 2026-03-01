@@ -112,7 +112,7 @@ def run_pipeline(user_query):
 
     # Strong constraints for LLM
     system_instructions = """
-You are a GIS workflow planner.
+You are an expert GIS analyst and spatial data scientist planner.
 
 If workflow_type is site_suitability:
 - You MUST include WeightedOverlay.
@@ -131,6 +131,7 @@ Rules:
 {
   "workflow_name": "",
   "workflow_type": "",
+  "reasoning": "Write a short paragraph explaining the spatial analysis strategy for this workflow. Act as an expert GIS consultant detailing why you selected these tools, how the criteria will interact, and why the resulting locations will be suitable.",
   "steps": [
     {
       "step_id": 1,
