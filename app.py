@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 # INITIALIZE
 # --------------------------------------------------
 
-ee.Initialize(project='llm-gis-project')
+ee.Initialize(project='geospatialproject-488418')
 
 app = FastAPI()
 

@@ -2,7 +2,7 @@ import requests
 import json
 import os
 
-GROQ_API_KEY = ""
+GROQ_API_KEY = " "
 
 def generate_workflow(user_query, context, system_instructions):
 

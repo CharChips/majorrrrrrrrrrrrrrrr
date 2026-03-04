@@ -1,5 +1,5 @@
 {
-    "workflow_name": "EV Charging Station Location Finder",
+    "workflow_name": "EV Charging Station Site Suitability",
     "workflow_type": "site_suitability",
     "steps": [
         {
@@ -19,7 +19,7 @@
             "step_id": 2,
             "tool": "DistanceRaster",
             "inputs": {
-                "vector_layer": "roads_vector",
+                "vector_layer": "nearest_roads",
                 "output_raster": "distance_raster"
             },
             "parameters": {},
@@ -31,7 +31,8 @@
             "step_id": 3,
             "tool": "NormalizeRaster",
             "inputs": {
-                "input_raster": "warped_raster"
+                "input_raster": "warped_raster",
+                "output_raster": "normalized_raster"
             },
             "parameters": {},
             "outputs": {
@@ -43,7 +44,8 @@
             "tool": "WeightedOverlay",
             "inputs": {
                 "input_raster": "normalized_raster",
-                "weight_raster": "distance_raster"
+                "weight_raster": "distance_raster",
+                "output_raster": "overlay_raster"
             },
             "parameters": {
                 "weight_field": "distance"
@@ -56,73 +58,79 @@
             "step_id": 5,
             "tool": "NormalizeRaster",
             "inputs": {
-                "input_raster": "overlay_raster"
+                "input_raster": "overlay_raster",
+                "output_raster": "final_normalized_raster"
             },
             "parameters": {},
             "outputs": {
-                "normalized_overlay_raster": "normalized_overlay_raster"
+                "final_normalized_raster": "final_normalized_raster"
             }
         },
         {
             "step_id": 6,
             "tool": "gdalwarp",
             "inputs": {
-                "input_raster": "normalized_overlay_raster"
+                "input_raster": "final_normalized_raster"
             },
             "parameters": {
                 "dstSRS": "EPSG:4326"
             },
             "outputs": {
-                "output_raster": "final_raster"
+                "output_raster": "final_warped_raster"
             }
         },
         {
             "step_id": 7,
-            "tool": "NormalizeRaster",
+            "tool": "gdalwarp",
             "inputs": {
-                "input_raster": "final_raster"
+                "input_raster": "final_warped_raster"
             },
-            "parameters": {},
+            "parameters": {
+                "dstSRS": "EPSG:4326"
+            },
             "outputs": {
-                "normalized_final_raster": "normalized_final_raster"
+                "output_raster": "final_warped_raster"
             }
         },
         {
             "step_id": 8,
+            "tool": "NormalizeRaster",
+            "inputs": {
+                "input_raster": "final_warped_raster",
+                "output_raster": "final_normalized_raster"
+            },
+            "parameters": {},
+            "outputs": {
+                "final_normalized_raster": "final_normalized_raster"
+            }
+        },
+        {
+            "step_id": 9,
             "tool": "WeightedOverlay",
             "inputs": {
-                "input_raster": "normalized_final_raster",
-                "weight_raster": "distance_raster"
+                "input_raster": "final_normalized_raster",
+                "weight_raster": "distance_raster",
+                "output_raster": "final_overlay_raster"
             },
             "parameters": {
                 "weight_field": "distance"
             },
             "outputs": {
-                "overlay_raster": "overlay_raster"
-            }
-        },
-        {
-            "step_id": 9,
-            "tool": "NormalizeRaster",
-            "inputs": {
-                "input_raster": "overlay_raster"
-            },
-            "parameters": {},
-            "outputs": {
-                "normalized_overlay_raster": "normalized_overlay_raster"
+                "final_overlay_raster": "final_overlay_raster"
             }
         },
         {
             "step_id": 10,
             "tool": "ExtractTopLocations",
             "inputs": {
-                "input_raster": "normalized_overlay_raster"
+                "input_raster": "final_overlay_raster",
+                "output_vector": "suitable_locations"
             },
             "parameters": {
                 "num_locations": 10
             },
             "outputs": {
-                "location_coordinates": "location_coordinates"
+                "suitable_locations": "suitable_locations"
             }
         }
     ]
