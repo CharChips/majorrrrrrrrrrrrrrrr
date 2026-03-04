@@ -127,6 +127,8 @@ class AnalysisRequest(BaseModel):
     query: str = ""
     place_name: str
     geojson: dict = None
+    top_n: int = 10
+    weights: dict = None
 
 @app.post("/generate-workflow")
 def generate_workflow(request: WorkflowRequest):
@@ -169,8 +171,9 @@ def analysis(request: AnalysisRequest):
         print(f"No features found for tags: {osm_tags}")
         return JSONResponse(content={"type": "FeatureCollection", "features": []})
 
-    # Drop null geometries and limit to top 15 results
-    features = features[~features.is_empty & features.is_valid].head(15)
+    # Drop null geometries and limit to top N results requested by UI
+    top_n = request.top_n if request.top_n else 10
+    features = features[~features.is_empty & features.is_valid].head(top_n)
     
     # 3. Ask LLM to generate a reason for each feature
     geojson_features = []

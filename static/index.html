@@ -1246,7 +1246,13 @@
                             <div class="dot" style="background:var(--accent-green)"></div> EV Sites
                         </div>
                         <div class="layer-chip" id="lc-heat" onclick="toggleLayer('heat')">
-                            <div class="dot" style="background:var(--accent-amber)"></div> Heat Map
+                            <div class="dot" style="background:var(--accent-amber)"></div> Heat Map (Pop)
+                        </div>
+                        <div class="layer-chip" id="lc-dem" onclick="toggleLayer('dem')">
+                            <div class="dot" style="background:#ab7634"></div> Elevation
+                        </div>
+                        <div class="layer-chip" id="lc-veg" onclick="toggleLayer('veg')">
+                            <div class="dot" style="background:#66A000"></div> Vegetation
                         </div>
                         <div class="layer-chip" id="lc-roads" onclick="toggleLayer('roads')">
                             <div class="dot" style="background:var(--accent-cyan)"></div> Roads
@@ -2088,8 +2094,26 @@
 
                 // ── STEP 2: Run GIS Engine ───────────────────────
                 log(`Submitting analysis for "${placeName}"…`, 'info');
-                const body = { place_name: placeName };
+
+                const wRoad = parseInt(document.getElementById('w-road').value, 10);
+                const wSlope = parseInt(document.getElementById('w-slope').value, 10);
+                const nLoc = parseInt(document.getElementById('n-loc').value, 10);
+
+                const body = {
+                    query: query,
+                    place_name: placeName,
+                    top_n: nLoc,
+                    weights: {
+                        road_dist: wRoad / 100.0,
+                        slope: wSlope / 100.0
+                    }
+                };
                 if (geojson) body.geojson = geojson;
+
+                // Fire off layer loader in background if any GEE layers are requested
+                if (activeLayers.has('heat') || activeLayers.has('dem') || activeLayers.has('veg') || activeLayers.has('roads')) {
+                    loadLayers(body);
+                }
 
                 const res = await fetch('/run-analysis', {
                     method: 'POST',
@@ -2161,6 +2185,77 @@
                 showToast('Pin mode deactivated', '');
             }
         });
+
+        // ─── MAP LAYERS LOGIC ────────────────────────────────────
+        const activeLayers = new Set(['osm', 'ev']);
+        const mapLayers = { osm, ev: evLayer };
+        let roadsLayer = null;
+
+        function toggleLayer(layerId) {
+            const chip = document.getElementById('lc-' + layerId);
+            if (activeLayers.has(layerId)) {
+                activeLayers.delete(layerId);
+                chip.classList.remove('active');
+                if (mapLayers[layerId] && map.hasLayer(mapLayers[layerId])) {
+                    map.removeLayer(mapLayers[layerId]);
+                }
+            } else {
+                activeLayers.add(layerId);
+                chip.classList.add('active');
+                if (mapLayers[layerId]) {
+                    mapLayers[layerId].addTo(map);
+                }
+            }
+        }
+
+        async function loadLayers(requestBody) {
+            try {
+                log('Requesting extra map layers from Earth Engine...', 'info');
+                const res = await fetch('/get-layers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!res.ok) {
+                    log('Failed to fetch layers — maybe EE project is unauthorized?', 'warn');
+                    return;
+                }
+                const data = await res.json();
+
+                // Heatmap (Population)
+                if (data.population && !mapLayers['heat']) {
+                    mapLayers['heat'] = L.tileLayer(data.population, { opacity: 0.6 });
+                    if (activeLayers.has('heat')) mapLayers['heat'].addTo(map);
+                }
+
+                // DEM
+                if (data.dem && !mapLayers['dem']) {
+                    mapLayers['dem'] = L.tileLayer(data.dem, { opacity: 0.5 });
+                    if (activeLayers.has('dem')) mapLayers['dem'].addTo(map);
+                }
+
+                // Vegetation (NDVI)
+                if (data.vegetation && !mapLayers['veg']) {
+                    mapLayers['veg'] = L.tileLayer(data.vegetation, { opacity: 0.5 });
+                    if (activeLayers.has('veg')) mapLayers['veg'].addTo(map);
+                }
+
+                // Roads (OSMnx GeoJSON)
+                if (data.roads && !mapLayers['roads']) {
+                    if (roadsLayer) map.removeLayer(roadsLayer);
+                    roadsLayer = L.geoJSON(data.roads, {
+                        style: { color: 'var(--accent-cyan)', weight: 1, opacity: 0.5 }
+                    });
+                    mapLayers['roads'] = roadsLayer;
+                    if (activeLayers.has('roads')) roadsLayer.addTo(map);
+                }
+
+                log('Extra map layers loaded successfully.', 'ok');
+            } catch (err) {
+                console.error("Layer load error:", err);
+            }
+        }
 
         // Init log
         log('GeoSpatial AI engine initialised — India scope', 'info');
