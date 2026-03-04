@@ -250,6 +250,11 @@
                 </select>
 
                 <input type="text" id="location" value="Navi Mumbai, Maharashtra, India">
+
+                <button class="btn" style="margin-top: 15px; width: 100%; background-color: #4CAF50;"
+                    onclick="loadLayers()">
+                    Load Context Layers (Earth Engine)
+                </button>
             </div>
         </div>
 
@@ -274,6 +279,13 @@
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
+        // --- Layer Control Manager ---
+        var baseMaps = {
+            "OpenStreetMap": osm
+        };
+        var overlayMaps = {};
+        var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 
         // --- Leaflet Draw Initialization ---
         var drawnItems = new L.FeatureGroup();
@@ -322,6 +334,75 @@
         }
         // -----------------------------------
 
+        // --- Dynamic Context Layers ---
+        var dynamicLayers = {};
+
+        async function loadLayers() {
+            const location = document.getElementById('location').value.trim();
+            if (!location) {
+                addMessage("Please enter a valid location.", false);
+                return;
+            }
+
+            const loadBtn = document.querySelector('button[onclick="loadLayers()"]');
+            loadBtn.textContent = "Loading GE Engine Layers...";
+            loadBtn.disabled = true;
+
+            try {
+                let requestBody = { place_name: location };
+                if (drawnItems && drawnItems.getLayers().length > 0) {
+                    requestBody.geojson = drawnItems.toGeoJSON();
+                }
+
+                const response = await fetch('/get-layers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                const data = await response.json();
+
+                // Remove existing dynamic layers from map & control
+                for (const key in dynamicLayers) {
+                    if (map.hasLayer(dynamicLayers[key])) { map.removeLayer(dynamicLayers[key]); }
+                    layerControl.removeLayer(dynamicLayers[key]);
+                }
+                dynamicLayers = {};
+
+                // 1. Add Earth Engine Tile Layers
+                const tileMapping = {
+                    "Population Density": data.population,
+                    "DEM (Elevation)": data.dem,
+                    "Vegetation (NDVI)": data.vegetation,
+                    "Land Use (ESA)": data.land_use
+                };
+
+                for (const [name, url] of Object.entries(tileMapping)) {
+                    if (url) {
+                        dynamicLayers[name] = L.tileLayer(url, { opacity: 0.7 });
+                        layerControl.addOverlay(dynamicLayers[name], name);
+                    }
+                }
+
+                // 2. Add Road Network GeoJSON
+                if (data.roads) {
+                    dynamicLayers["Road Network"] = L.geoJSON(data.roads, {
+                        style: { color: "#ff7800", weight: 1, opacity: 0.6 }
+                    });
+                    layerControl.addOverlay(dynamicLayers["Road Network"], "Road Network");
+                }
+
+                addMessage("Successfully loaded Earth Engine context! Use the layer control box in the top right to toggle layers on and off.", false);
+
+            } catch (e) {
+                console.error(e);
+                addMessage("Error loading context layers from Earth Engine.", false);
+            } finally {
+                loadBtn.textContent = "Load Context Layers (Earth Engine)";
+                loadBtn.disabled = false;
+            }
+        }
+        // -----------------------------------
+
         var demLayer;
         var evLayer = L.layerGroup().addTo(map);
         var currentWorkflow = null;
@@ -357,13 +438,15 @@
             }
         }
 
+        let activeQuery = "";
+
         async function sendQuery() {
             const input = document.getElementById('chat-input');
-            const query = input.value.trim();
-            if (!query) return;
+            activeQuery = input.value.trim();
+            if (!activeQuery) return;
 
             input.value = '';
-            addMessage(query, true);
+            addMessage(activeQuery, true);
 
             const loadingMsg = addMessage("Thinking... generating workflow...", false);
             loadingMsg.classList.add('loading');
@@ -373,7 +456,7 @@
                 const response = await fetch('/generate-workflow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query, location: location })
+                    body: JSON.stringify({ query: activeQuery, location: location })
                 });
 
                 const data = await response.json();
@@ -430,7 +513,10 @@
             loadingMsg.classList.add('loading');
 
             try {
-                let requestBody = { place_name: location };
+                let requestBody = {
+                    place_name: location,
+                    query: activeQuery
+                };
 
                 if (drawnItems && drawnItems.getLayers().length > 0) {
                     requestBody.geojson = drawnItems.toGeoJSON();
@@ -445,8 +531,8 @@
                 const data = await response.json();
                 loadingMsg.remove();
 
-                if (data && data.length > 0) {
-                    addMessage(`Analysis complete! Found ${data.length} suitable locations. Updating map...`, false);
+                if (data && data.features && data.features.length > 0) {
+                    addMessage(`Analysis complete! Found ${data.features.length} suitable locations based on your query. Click on the map highlighted areas to see the AI's reasoning!`, false);
                     updateMap(data);
                 } else {
                     addMessage("Analysis complete, but no suitable locations were found.", false);
@@ -459,35 +545,41 @@
             }
         }
 
-        function updateMap(data) {
+        function updateMap(geojsonData) {
             evLayer.clearLayers();
 
-            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            const highlightStyle = {
+                color: "#ff0000",
+                weight: 3,
+                opacity: 0.8,
+                fillColor: "#ff0000",
+                fillOpacity: 0.4
+            };
 
-            data.forEach(loc => {
-                L.circleMarker([loc.latitude, loc.longitude], {
-                    radius: 8,
-                    fillColor: "green",
-                    color: "#000",
-                    fillOpacity: 0.8
-                })
-                    .bindPopup("Score: " + loc.score.toFixed(2))
-                    .addTo(evLayer);
+            const layer = L.geoJSON(geojsonData, {
+                style: highlightStyle,
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 8,
+                        fillColor: "#ff0000",
+                        color: "#000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.reason) {
+                        const name = feature.properties.name || "Selected Location";
+                        const popupContent = `<strong>${name}</strong><br><br>${feature.properties.reason}`;
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            }).addTo(evLayer);
 
-                minLat = Math.min(minLat, loc.latitude);
-                maxLat = Math.max(maxLat, loc.latitude);
-                minLng = Math.min(minLng, loc.longitude);
-                maxLng = Math.max(maxLng, loc.longitude);
-            });
-
-            if (data.length > 0) {
-                map.fitBounds([
-                    [minLat, minLng],
-                    [maxLat, maxLng]
-                ]);
+            if (geojsonData.features.length > 0) {
+                map.fitBounds(layer.getBounds());
             }
-
-            addDEM();
         }
 
         function addDEM() {

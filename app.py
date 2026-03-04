@@ -116,6 +116,7 @@ def run_ev_analysis(place_name: str, geojson: dict = None):
 
 from pydantic import BaseModel
 import json
+from openrouter_client import generate_workflow, generate_osm_tags, generate_feature_reasoning
 from rag_pipeline import run_pipeline
 
 class WorkflowRequest(BaseModel):
@@ -123,6 +124,7 @@ class WorkflowRequest(BaseModel):
     location: str = ""
 
 class AnalysisRequest(BaseModel):
+    query: str = ""
     place_name: str
     geojson: dict = None
 
@@ -135,8 +137,142 @@ def generate_workflow(request: WorkflowRequest):
 
 @app.post("/run-analysis")
 def analysis(request: AnalysisRequest):
-    locations = run_ev_analysis(request.place_name, request.geojson)
-    return JSONResponse(content=locations)
+    # Determine boundary
+    if request.geojson and 'features' in request.geojson and len(request.geojson['features']) > 0:
+        import geopandas as gpd
+        from shapely.geometry import shape
+        geom = shape(request.geojson['features'][0]['geometry'])
+        if geom.geom_type in ['Point', 'LineString']:
+            geom = geom.buffer(0.05).envelope
+        boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+    else:
+        try:
+            boundary = ox.geocode_to_gdf(request.place_name)
+            boundary = boundary.to_crs(epsg=4326)
+        except TypeError:
+            import geopandas as gpd
+            from shapely.geometry import Point
+            lat, lng = ox.geocode(request.place_name)
+            geom = Point(lng, lat).buffer(0.05).envelope
+            boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+
+    roi_geom = boundary.geometry.iloc[0]
+
+    # 1. Ask LLM to generate OSM tags for the user's query
+    osm_tags = generate_osm_tags(request.query) if request.query else {"amenity": True}
+
+    # 2. Fetch all geometries matching these tags inside the boundary
+    try:
+        features = ox.features_from_polygon(roi_geom, tags=osm_tags)
+        features = features.to_crs(epsg=4326)
+    except Exception as e:
+        print(f"No features found for tags: {osm_tags}")
+        return JSONResponse(content={"type": "FeatureCollection", "features": []})
+
+    # Drop null geometries and limit to top 15 results
+    features = features[~features.is_empty & features.is_valid].head(15)
+    
+    # 3. Ask LLM to generate a reason for each feature
+    geojson_features = []
+    
+    # Pre-calculate centroids for the reasoning prompt
+    for idx, row in features.iterrows():
+        props = row.drop('geometry').dropna().to_dict()
+        name = props.get('name', 'Unnamed Location')
+        
+        # Ask LLM for reasoning
+        reason = generate_feature_reasoning(request.query, props)
+        
+        # Build strict valid GeoJSON Feature
+        feature = {
+            "type": "Feature",
+            "geometry": row.geometry.__geo_interface__,
+            "properties": {
+                "name": name,
+                "reason": reason,
+                "raw_tags": props
+            }
+        }
+        geojson_features.append(feature)
+
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": geojson_features
+    }
+
+    return JSONResponse(content=feature_collection)
+
+@app.post("/get-layers")
+def get_layers(request: AnalysisRequest):
+    import json
+    # Determine boundary (clone from ev_analysis)
+    if request.geojson and 'features' in request.geojson and len(request.geojson['features']) > 0:
+        import geopandas as gpd
+        from shapely.geometry import shape
+        geom = shape(request.geojson['features'][0]['geometry'])
+        if geom.geom_type in ['Point', 'LineString']:
+            geom = geom.buffer(0.05).envelope
+        boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+    else:
+        try:
+            boundary = ox.geocode_to_gdf(request.place_name)
+            boundary = boundary.to_crs(epsg=4326)
+        except TypeError:
+            import geopandas as gpd
+            from shapely.geometry import Point
+            lat, lng = ox.geocode(request.place_name)
+            geom = Point(lng, lat).buffer(0.05).envelope
+            boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+
+    roi_geom = boundary.geometry.iloc[0]
+    bounds = roi_geom.bounds
+    roi = ee.Geometry.Rectangle(bounds)
+
+    # 1. Population (WorldPop)
+    pop = ee.ImageCollection("WorldPop/GP/100m/pop") \
+            .filterBounds(roi) \
+            .map(lambda img: img.clip(roi)) \
+            .mean()
+            
+    pop_id = pop.getMapId({
+        "min": 0, "max": 50, "palette": ['24126c', '1fff4f', 'd4ff50']
+    })
+
+    # 2. DEM / Elevation
+    dem = ee.Image("USGS/SRTMGL1_003").clip(roi)
+    dem_id = dem.getMapId({
+        "min": 0, "max": 3000, "palette": ['006600', '002200', 'fff700', 'ab7634', 'c4d0ff', 'ffffff']
+    })
+
+    # 3. Vegetation (NDVI)
+    ndvi = ee.ImageCollection("MODIS/061/MOD13Q1") \
+             .filterBounds(roi) \
+             .map(lambda img: img.clip(roi)) \
+             .mean().select('NDVI')
+    ndvi_id = ndvi.getMapId({
+        "min": 0, "max": 8000, "palette": ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']
+    })
+
+    # 4. Land Use (ESA WorldCover)
+    land_use = ee.ImageCollection("ESA/WorldCover/v100").first().clip(roi)
+    lu_id = land_use.getMapId({
+        "bands": ['Map']
+    })
+    
+    # 5. Roads (OSMnx)
+    G = ox.graph_from_polygon(roi_geom, network_type='drive')
+    roads = ox.graph_to_gdfs(G, nodes=False)
+    roads_json = json.loads(roads.to_json())
+
+    response = {
+        "population": pop_id['tile_fetcher'].url_format,
+        "dem": dem_id['tile_fetcher'].url_format,
+        "vegetation": ndvi_id['tile_fetcher'].url_format,
+        "land_use": lu_id['tile_fetcher'].url_format,
+        "roads": roads_json
+    }
+
+    return JSONResponse(content=response)
 
 @app.get("/dem")
 def get_dem():

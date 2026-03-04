@@ -71,7 +71,7 @@ Constraints: {tool.get('constraints')}
 # ----------------------------------------
 # JSON validator
 # ----------------------------------------
-import json
+import json_repair
 import re
 
 def validate_json(output):
@@ -88,7 +88,10 @@ def validate_json(output):
 
         json_string = json_match.group(0)
 
-        parsed = json.loads(json_string)
+        parsed = json_repair.loads(json_string)
+
+        if not isinstance(parsed, dict):
+            raise ValueError('Parsed output is not a dictionary')
 
         if "steps" not in parsed:
             raise ValueError("Missing 'steps' key")
@@ -96,7 +99,11 @@ def validate_json(output):
         return parsed
 
     except Exception as e:
-        return {"error": f"Invalid JSON: {str(e)}"}
+        with open("raw_output.txt", "w") as f:
+            f.write(output)
+        with open('raw_output.txt', 'w', encoding='utf-8') as f:
+            f.write(output)
+        return {'error': f'Invalid JSON: {str(e)}', 'raw': output}
 # ----------------------------------------
 # Main pipeline
 # ----------------------------------------
@@ -111,39 +118,47 @@ def run_pipeline(user_query, location=""):
     context = build_context(retrieved)
 
     # Strong constraints for LLM
-    system_instructions = f"""
+    system_instructions = """
 You are an expert GIS analyst and spatial data scientist planner.
-The user is currently focused on the geographic region: {location}.
+The user is currently focused on the geographic region: {LOCATION}.
+
+We have the following strict datasets available for analysis:
+1. "population_raster": Population density. Use for Malls, Hospitals, Commercial hubs, Schools, etc.
+2. "dem_raster": Elevation/Slope. Use for Solar farms, Wind farms, Flood risks, Construction costs.
+3. "vegetation_raster": NDVI or Land Cover. Use to avoid forests, or find green spaces/parks.
+4. "road_network": Distance to driving roads. Use for warehouses, EV stations, emergency services.
+5. "land_use_raster": Zoning classifications. Use to evaluate commercial vs residential zones or avoid water bodies.
 
 If workflow_type is site_suitability:
-- You MUST include WeightedOverlay.
+- You MUST select the most logical datasets from the 5 available options above based on the specific end-goal.
+- You MUST include WeightedOverlay for those criteria.
 - You MUST normalize all criteria before combining.
 - ExtractTopLocations must be final step.
 - Do not repeat gdalwarp unnecessarily.
 
 Rules:
 - Maximum 10 steps.
-- Do not repeat tools unnecessarily.
+- Do not make up datasets. Use ONLY the names listed above as inputs.
 - Use raster-based approach for site suitability.
 - All steps must be logically ordered.
 - Output ONLY valid JSON.
 - Follow this schema:
 
-{{
+{
   "workflow_name": "",
   "workflow_type": "",
-  "reasoning": "Write a short paragraph explaining the spatial analysis strategy for this workflow. Act as an expert GIS consultant detailing why you selected these tools, how the criteria will interact, and why the resulting locations will be suitable for this specific location.",
+  "reasoning": "Write a short paragraph explaining the spatial analysis strategy for this workflow. Act as an expert GIS consultant detailing explicitly WHICH of the 5 datasets you chose and WHY they are suitable for this specific location and use-case.",
   "steps": [
-    {{
+    {
       "step_id": 1,
       "tool": "",
-      "inputs": {{}},
-      "parameters": {{}},
-      "outputs": {{}}
-    }}
+      "inputs": {},
+      "parameters": {},
+      "outputs": {}
+    }
   ]
-}}
-"""
+}
+""".replace("{LOCATION}", location)
 
     llm_output = generate_workflow(user_query, context, system_instructions)
 
@@ -160,3 +175,5 @@ Rules:
         workflow = validate_json(llm_output)
 
     return workflow
+
+

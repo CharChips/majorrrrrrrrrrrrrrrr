@@ -1,3 +1,132 @@
 {
-    "error": "Invalid JSON: Expecting ',' delimiter: line 125 column 6 (char 3411)"
+    "workflow_name": "Best Location to Jog in Mumbai",
+    "workflow_type": "site_suitability",
+    "reasoning": "To find the best location to jog in Mumbai, we will use a raster-based approach. We will select the 'vegetation_raster' to avoid forests and find green spaces/parks, and the 'road_network' to ensure proximity to driving roads. We will then use WeightedOverlay to combine these criteria, normalize the values, and extract the top locations.",
+    "steps": [
+        {
+            "step_id": 1,
+            "tool": "gdalwarp",
+            "inputs": {
+                "input_raster": "vegetation_raster"
+            },
+            "parameters": {
+                "output_crs": "EPSG:4326"
+            },
+            "outputs": {
+                "output_raster": "vegetation_raster_warped"
+            }
+        },
+        {
+            "step_id": 2,
+            "tool": "gdalwarp",
+            "inputs": {
+                "input_raster": "road_network"
+            },
+            "parameters": {
+                "output_crs": "EPSG:4326"
+            },
+            "outputs": {
+                "output_raster": "road_network_warped"
+            }
+        },
+        {
+            "step_id": 3,
+            "tool": "NormalizeRaster",
+            "inputs": {
+                "input_raster": "vegetation_raster_warped"
+            },
+            "parameters": {},
+            "outputs": {
+                "output_raster": "vegetation_raster_normalized"
+            }
+        },
+        {
+            "step_id": 4,
+            "tool": "NormalizeRaster",
+            "inputs": {
+                "input_raster": "road_network_warped"
+            },
+            "parameters": {},
+            "outputs": {
+                "output_raster": "road_network_normalized"
+            }
+        },
+        {
+            "step_id": 5,
+            "tool": "WeightedOverlay",
+            "inputs": {
+                "raster1": "vegetation_raster_normalized",
+                "raster2": "road_network_normalized"
+            },
+            "parameters": {
+                "weights": "0.7, 0.3"
+            },
+            "outputs": {
+                "output_raster": "suitability_raster"
+            }
+        },
+        {
+            "step_id": 6,
+            "tool": "gdalwarp",
+            "inputs": {
+                "input_raster": "suitability_raster"
+            },
+            "parameters": {
+                "output_crs": "EPSG:4326"
+            },
+            "outputs": {
+                "output_raster": "suitability_raster_warped"
+            }
+        },
+        {
+            "step_id": 7,
+            "tool": "NormalizeRaster",
+            "inputs": {
+                "input_raster": "suitability_raster_warped"
+            },
+            "parameters": {},
+            "outputs": {
+                "output_raster": "suitability_raster_normalized"
+            }
+        },
+        {
+            "step_id": 8,
+            "tool": "ExtractTopLocations",
+            "inputs": {
+                "input_raster": "suitability_raster_normalized"
+            },
+            "parameters": {
+                "N": "10"
+            },
+            "outputs": {
+                "output_locations": "top_locations"
+            }
+        },
+        {
+            "step_id": 9,
+            "tool": "gdalwarp",
+            "inputs": {
+                "input_raster": "top_locations"
+            },
+            "parameters": {
+                "output_crs": "EPSG:4326"
+            },
+            "outputs": {
+                "output_raster": "top_locations_warped"
+            }
+        },
+        {
+            "step_id": 10,
+            "tool": "ExtractTopLocations",
+            "inputs": {
+                "input_raster": "top_locations_warped"
+            },
+            "parameters": {
+                "N": "10"
+            },
+            "outputs": {
+                "output_locations": "final_locations"
+            }
+        }
+    ]
 }
