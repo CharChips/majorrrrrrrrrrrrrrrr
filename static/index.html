@@ -1,918 +1,1813 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GeoSpatial AI — EV Site Intelligence</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoSpatial AI — EV Site Intelligence</title>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
-  <style>
-    /* ─── DESIGN TOKENS ────────────────────────────────── */
-    :root {
-      --bg-base:       #050d1a;
-      --bg-panel:      #0a1628;
-      --bg-card:       #0f1e35;
-      --bg-card-hover: #142340;
-      --border:        #1a3a5c;
-      --border-glow:   #00d4ff33;
-      --accent-cyan:   #00d4ff;
-      --accent-green:  #00ff9d;
-      --accent-amber:  #ffb830;
-      --accent-red:    #ff4d6d;
-      --text-primary:  #e0f0ff;
-      --text-secondary:#7da8cc;
-      --text-dim:      #3a6080;
-      --font-ui:       'Inter', sans-serif;
-      --font-mono:     'JetBrains Mono', monospace;
-      --radius:        8px;
-      --radius-lg:     14px;
-      --transition:    0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    <style>
+        /* ─── DESIGN TOKENS ────────────────────────────────── */
+        :root {
+            --bg-base: #050d1a;
+            --bg-panel: #0a1628;
+            --bg-card: #0f1e35;
+            --bg-card-hover: #142340;
+            --border: #1a3a5c;
+            --border-glow: #00d4ff33;
+            --accent-cyan: #00d4ff;
+            --accent-green: #00ff9d;
+            --accent-amber: #ffb830;
+            --accent-red: #ff4d6d;
+            --text-primary: #e0f0ff;
+            --text-secondary: #7da8cc;
+            --text-dim: #3a6080;
+            --font-ui: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius: 8px;
+            --radius-lg: 14px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-    /* ─── RESET & BASE ──────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; font-family: var(--font-ui); background: var(--bg-base); color: var(--text-primary); }
+        /* ─── RESET & BASE ──────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    /* ─── LAYOUT ────────────────────────────────────────── */
-    #app { display: flex; flex-direction: column; height: 100vh; }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-ui);
+            background: var(--bg-base);
+            color: var(--text-primary);
+        }
 
-    /* ─── TOP BAR ───────────────────────────────────────── */
-    #topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; height: 56px; flex-shrink: 0;
-      background: linear-gradient(90deg, #060f1f 0%, #081525 100%);
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 2px 20px #000a;
-      position: relative; z-index: 1000;
-    }
-    #topbar::after {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-      opacity: 0.5;
-    }
-    .brand {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .brand-icon {
-      width: 32px; height: 32px;
-      background: linear-gradient(135deg, #0066cc, #00d4ff);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 14px #00d4ff44;
-    }
-    .brand-name {
-      font-size: 15px; font-weight: 700;
-      letter-spacing: 0.04em; color: var(--text-primary);
-    }
-    .brand-name span { color: var(--accent-cyan); }
-    .brand-tag {
-      font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
-      color: var(--text-dim); text-transform: uppercase;
-    }
+        /* ─── LAYOUT ────────────────────────────────────────── */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-    .topbar-center {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 14px;
-    }
-    .topbar-center input {
-      background: none; border: none; outline: none;
-      font-family: var(--font-ui); font-size: 13px;
-      color: var(--text-primary); width: 320px;
-    }
-    .topbar-center input::placeholder { color: var(--text-dim); }
+        /* ─── TOP BAR ───────────────────────────────────────── */
+        #topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 56px;
+            flex-shrink: 0;
+            background: linear-gradient(90deg, #060f1f 0%, #081525 100%);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 20px #000a;
+            position: relative;
+            z-index: 1000;
+        }
 
-    .topbar-actions { display: flex; align-items: center; gap: 10px; }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulse-dot 2s infinite;
-    }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-    .status-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+        #topbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0.5;
+        }
 
-    /* ─── MAIN CONTENT ─────────────────────────────────── */
-    #main { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    /* ─── LEFT PANEL ────────────────────────────────────── */
-    #sidebar {
-      width: 320px; flex-shrink: 0;
-      background: var(--bg-panel);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      overflow-y: auto; z-index: 100;
-    }
-    #sidebar::-webkit-scrollbar { width: 4px; }
-    #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #0066cc, #00d4ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 14px #00d4ff44;
+        }
 
-    .panel-section {
-      border-bottom: 1px solid var(--border);
-      padding: 16px;
-    }
-    .section-label {
-      font-size: 10px; font-weight: 600;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 12px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .section-label::after {
-      content: ''; flex: 1; height: 1px;
-      background: var(--border);
-    }
+        .brand-name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+        }
 
-    /* Query input */
-    .query-area {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 10px 12px;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .query-area textarea {
-      background: none; border: none; outline: none; resize: none;
-      font-family: var(--font-ui); font-size: 13px;
-      color: var(--text-primary); line-height: 1.6; min-height: 60px;
-    }
-    .query-area textarea::placeholder { color: var(--text-dim); }
-    .query-footer { display: flex; justify-content: space-between; align-items: center; }
-    .query-hint { font-size: 11px; color: var(--text-dim); }
+        .brand-name span {
+            color: var(--accent-cyan);
+        }
 
-    /* CTA Button */
-    #run-btn {
-      display: flex; align-items: center; gap: 7px;
-      background: linear-gradient(135deg, #0066cc, #00aaff);
-      border: none; border-radius: var(--radius);
-      padding: 8px 16px; cursor: pointer;
-      font-family: var(--font-ui); font-size: 12px; font-weight: 600;
-      color: #fff; letter-spacing: 0.04em;
-      box-shadow: 0 0 18px #0088ff44;
-      transition: var(--transition);
-      position: relative; overflow: hidden;
-    }
-    #run-btn::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(135deg, #0088ff, #00d4ff);
-      opacity: 0; transition: var(--transition);
-    }
-    #run-btn:hover::before { opacity: 1; }
-    #run-btn:hover { box-shadow: 0 0 28px #00aaffaa; transform: translateY(-1px); }
-    #run-btn:active { transform: translateY(0); }
-    #run-btn.loading { pointer-events: none; opacity: 0.7; }
-    #run-btn span { position: relative; z-index: 1; }
+        .brand-tag {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
 
-    /* Parameters */
-    .param-row {
-      display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
-    }
-    .param-row:last-child { margin-bottom: 0; }
-    .param-label {
-      font-size: 11px; color: var(--text-secondary); font-weight: 500;
-      display: flex; justify-content: space-between;
-    }
-    .param-label .param-val {
-      font-family: var(--font-mono); color: var(--accent-cyan); font-size: 11px;
-    }
-    input[type="range"] {
-      -webkit-appearance: none; appearance: none;
-      width: 100%; height: 3px; border-radius: 2px;
-      background: var(--border); outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: var(--accent-cyan);
-      box-shadow: 0 0 6px var(--accent-cyan);
-      cursor: pointer; transition: var(--transition);
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 12px var(--accent-cyan); transform: scale(1.2);
-    }
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            position: relative;
+        }
 
-    /* Criteria cards */
-    .criteria-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 10px 12px;
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 8px; cursor: pointer;
-      transition: var(--transition); position: relative; overflow: hidden;
-    }
-    .criteria-card::before {
-      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-    }
-    .criteria-card.road::before { background: var(--accent-cyan); }
-    .criteria-card.slope::before { background: var(--accent-green); }
-    .criteria-card.pop::before { background: var(--accent-amber); }
-    .criteria-card.grid::before { background: #a78bfa; }
-    .criteria-card:hover { background: var(--bg-card-hover); border-color: #2a5580; }
-    .criteria-icon {
-      width: 32px; height: 32px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .criteria-card.road .criteria-icon { background: #00d4ff11; color: var(--accent-cyan); }
-    .criteria-card.slope .criteria-icon { background: #00ff9d11; color: var(--accent-green); }
-    .criteria-card.pop .criteria-icon { background: #ffb83011; color: var(--accent-amber); }
-    .criteria-card.grid .criteria-icon { background: #a78bfa11; color: #a78bfa; }
-    .criteria-info { flex: 1; }
-    .criteria-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
-    .criteria-desc { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-    .criteria-weight {
-      font-family: var(--font-mono); font-size: 11px;
-      color: var(--accent-cyan); font-weight: 500;
-      background: #00d4ff0d; padding: 2px 6px; border-radius: 4px;
-    }
+        .topbar-center.searching {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px #00d4ff22;
+        }
 
-    /* Workflow steps */
-    .workflow-step {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 8px 0; position: relative;
-    }
-    .step-connector {
-      position: absolute; left: 15px; top: 28px; bottom: -8px;
-      width: 1px; background: var(--border);
-    }
-    .step-connector.done { background: var(--accent-cyan); }
-    .step-num {
-      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700;
-      border: 1px solid var(--border); color: var(--text-dim);
-      background: var(--bg-card); transition: var(--transition);
-    }
-    .step-num.active {
-      border-color: var(--accent-cyan); color: var(--accent-cyan);
-      box-shadow: 0 0 8px #00d4ff44;
-      animation: step-pulse 1.5s infinite;
-    }
-    .step-num.done {
-      border-color: var(--accent-green); color: var(--accent-green);
-      background: #00ff9d0d;
-    }
-    @keyframes step-pulse {
-      0%,100% { box-shadow: 0 0 8px #00d4ff44; }
-      50% { box-shadow: 0 0 16px #00d4ffaa; }
-    }
-    .step-body { flex: 1; padding-bottom: 4px; }
-    .step-tool {
-      font-size: 12px; font-weight: 600; color: var(--text-primary);
-      font-family: var(--font-mono);
-    }
-    .step-info { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+        .topbar-center input {
+            background: none;
+            border: none;
+            outline: none;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--text-primary);
+            width: 340px;
+        }
 
-    /* Metrics */
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .metric-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 10px 12px;
-      transition: var(--transition);
-    }
-    .metric-card:hover { border-color: var(--border-glow); }
-    .metric-val {
-      font-family: var(--font-mono); font-size: 20px; font-weight: 700;
-      line-height: 1;
-    }
-    .metric-val.cyan { color: var(--accent-cyan); }
-    .metric-val.green { color: var(--accent-green); }
-    .metric-val.amber { color: var(--accent-amber); }
-    .metric-val.purple { color: #a78bfa; }
-    .metric-lbl { font-size: 10px; color: var(--text-dim); margin-top: 4px; font-weight: 500; }
+        .topbar-center input::placeholder {
+            color: var(--text-dim);
+        }
 
-    /* ─── MAP ───────────────────────────────────────────── */
-    #map-wrap { flex: 1; position: relative; }
-    #map { width: 100%; height: 100%; }
+        /* Geocoder spinner */
+        .geo-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+            flex-shrink: 0;
+        }
 
-    /* Leaflet dark override */
-    .leaflet-tile-pane { filter: brightness(0.7) saturate(0.6) hue-rotate(200deg); }
+        .geo-spinner.active {
+            display: block;
+        }
 
-    /* Floating map toolbar */
-    #map-toolbar {
-      position: absolute; top: 16px; left: 16px; z-index: 500;
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .map-btn {
-      width: 36px; height: 36px;
-      background: var(--bg-panel); border: 1px solid var(--border);
-      border-radius: var(--radius); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-secondary); transition: var(--transition);
-      box-shadow: 0 2px 10px #0006;
-    }
-    .map-btn:hover {
-      background: var(--bg-card); color: var(--accent-cyan);
-      border-color: var(--accent-cyan); box-shadow: 0 0 12px #00d4ff22;
-    }
-    .map-btn.active {
-      background: #00d4ff15; color: var(--accent-cyan);
-      border-color: var(--accent-cyan);
-    }
+        /* Geocoder dropdown */
+        #geo-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 8px 32px #000c;
+            z-index: 9000;
+            display: none;
+        }
 
-    /* Legend */
-    #legend {
-      position: absolute; bottom: 24px; right: 24px; z-index: 500;
-      background: #0a1628ee; border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 14px 16px; min-width: 160px;
-      backdrop-filter: blur(12px);
-    }
-    .legend-title {
-      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px;
-    }
-    .legend-item {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
-    }
-    .legend-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-      box-shadow: 0 0 6px currentColor;
-    }
-    .legend-text { font-size: 11px; color: var(--text-secondary); }
+        #geo-dropdown.open {
+            display: block;
+        }
 
-    /* Score gradient bar */
-    .score-bar {
-      height: 6px; border-radius: 3px; margin-top: 10px;
-      background: linear-gradient(90deg, #ff4d6d, #ffb830, #00ff9d);
-    }
-    .score-labels {
-      display: flex; justify-content: space-between;
-      margin-top: 4px; font-size: 9px; color: var(--text-dim);
-    }
+        .geo-option {
+            padding: 10px 14px;
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
 
-    /* Coordinates bar */
-    #coords-bar {
-      position: absolute; bottom: 24px; left: 16px; z-index: 500;
-      background: #0a1628cc; border: 1px solid var(--border);
-      border-radius: 6px; padding: 6px 12px;
-      font-family: var(--font-mono); font-size: 11px;
-      color: var(--text-secondary); backdrop-filter: blur(8px);
-      display: flex; gap: 14px;
-    }
-    #coords-bar span { color: var(--text-dim); font-size: 10px; }
+        .geo-option:last-child {
+            border-bottom: none;
+        }
 
-    /* ─── RIGHT PANEL ───────────────────────────────────── */
-    #right-panel {
-      width: 280px; flex-shrink: 0;
-      background: var(--bg-panel);
-      border-left: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      overflow-y: auto;
-    }
-    #right-panel::-webkit-scrollbar { width: 4px; }
-    #right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .geo-option:hover {
+            background: var(--bg-card-hover);
+        }
 
-    /* Location results */
-    .location-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 10px 12px;
-      margin-bottom: 8px; cursor: pointer;
-      transition: var(--transition); position: relative; overflow: hidden;
-    }
-    .location-card:hover { background: var(--bg-card-hover); border-color: #2a5580; }
-    .location-card.selected {
-      border-color: var(--accent-cyan);
-      background: #00d4ff08;
-      box-shadow: 0 0 14px #00d4ff1a;
-    }
-    .location-rank {
-      position: absolute; top: 8px; right: 10px;
-      font-family: var(--font-mono); font-size: 10px;
-      color: var(--text-dim);
-    }
-    .location-score {
-      font-family: var(--font-mono); font-size: 18px; font-weight: 700;
-      color: var(--accent-green);
-    }
-    .location-coords {
-      font-family: var(--font-mono); font-size: 10px;
-      color: var(--text-dim); margin-top: 3px;
-    }
-    .score-fill {
-      height: 3px; border-radius: 2px; margin-top: 8px;
-      background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
-      transition: var(--transition);
-    }
+        .geo-option-main {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
 
-    /* Analysis log */
-    #log-area {
-      background: var(--bg-base); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 10px 12px;
-      font-family: var(--font-mono); font-size: 11px;
-      color: var(--text-secondary); line-height: 1.7;
-      max-height: 160px; overflow-y: auto;
-      margin: 0 16px 16px;
-    }
-    #log-area::-webkit-scrollbar { width: 3px; }
-    #log-area::-webkit-scrollbar-thumb { background: var(--border); }
-    .log-line { display: flex; gap: 8px; }
-    .log-ts { color: var(--text-dim); }
-    .log-msg.ok { color: var(--accent-green); }
-    .log-msg.info { color: var(--accent-cyan); }
-    .log-msg.warn { color: var(--accent-amber); }
-    .log-msg.err { color: var(--accent-red); }
+        .geo-option-sub {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
 
-    /* ─── LOADING OVERLAY ───────────────────────────────── */
-    #loading-overlay {
-      display: none;
-      position: absolute; inset: 0;
-      background: #050d1acc; z-index: 900;
-      align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px;
-      backdrop-filter: blur(4px);
-    }
-    #loading-overlay.active { display: flex; }
-    .spinner-ring {
-      width: 56px; height: 56px; border-radius: 50%;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent-cyan);
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text {
-      font-size: 13px; color: var(--text-secondary); font-weight: 500;
-    }
-    .loading-sub {
-      font-size: 11px; color: var(--text-dim);
-      font-family: var(--font-mono);
-    }
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    /* ─── TOAST ──────────────────────────────────────────── */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 10px 20px;
-      font-size: 13px; font-weight: 500; color: var(--text-primary);
-      box-shadow: 0 8px 32px #000a; z-index: 9999;
-      opacity: 0; transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    #toast.show { opacity: 1; }
-    #toast.success { border-color: var(--accent-green); color: var(--accent-green); }
-    #toast.error   { border-color: var(--accent-red);   color: var(--accent-red); }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse-dot 2s infinite;
+        }
 
-    /* ─── LAYER CHIPS ────────────────────────────────────── */
-    .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .layer-chip {
-      display: flex; align-items: center; gap: 5px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 4px 10px;
-      font-size: 11px; color: var(--text-secondary);
-      cursor: pointer; transition: var(--transition);
-    }
-    .layer-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .layer-chip:hover { border-color: #2a5580; color: var(--text-primary); }
-    .layer-chip.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: #00d4ff0d; }
+        @keyframes pulse-dot {
 
-    /* ─── MISC ───────────────────────────────────────────── */
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .small-badge {
-      font-size: 9px; font-weight: 600; padding: 1px 6px;
-      border-radius: 10px; letter-spacing: 0.06em; text-transform: uppercase;
-    }
-    .badge-green { background: #00ff9d15; color: var(--accent-green); border: 1px solid #00ff9d33; }
-    .badge-cyan  { background: #00d4ff15; color: var(--accent-cyan);  border: 1px solid #00d4ff33; }
-  </style>
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .status-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ─── MAIN CONTENT ─────────────────────────────────── */
+        #main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ─── LEFT PANEL ────────────────────────────────────── */
+        #sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Query input */
+        .query-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .query-area textarea {
+            background: none;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 60px;
+        }
+
+        .query-area textarea::placeholder {
+            color: var(--text-dim);
+        }
+
+        .query-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .query-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* CTA Button */
+        #run-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(135deg, #0066cc, #00aaff);
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0 18px #0088ff44;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #run-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #0088ff, #00d4ff);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        #run-btn:hover::before {
+            opacity: 1;
+        }
+
+        #run-btn:hover {
+            box-shadow: 0 0 28px #00aaffaa;
+            transform: translateY(-1px);
+        }
+
+        #run-btn:active {
+            transform: translateY(0);
+        }
+
+        #run-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        #run-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Parameters */
+        .param-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .param-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .param-label .param-val {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            font-size: 11px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 6px var(--accent-cyan);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 12px var(--accent-cyan);
+            transform: scale(1.2);
+        }
+
+        /* Criteria cards */
+        .criteria-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .criteria-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+        }
+
+        .criteria-card.road::before {
+            background: var(--accent-cyan);
+        }
+
+        .criteria-card.slope::before {
+            background: var(--accent-green);
+        }
+
+        .criteria-card.pop::before {
+            background: var(--accent-amber);
+        }
+
+        .criteria-card.grid::before {
+            background: #a78bfa;
+        }
+
+        .criteria-card:hover {
+            background: var(--bg-card-hover);
+            border-color: #2a5580;
+        }
+
+        .criteria-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .criteria-card.road .criteria-icon {
+            background: #00d4ff11;
+            color: var(--accent-cyan);
+        }
+
+        .criteria-card.slope .criteria-icon {
+            background: #00ff9d11;
+            color: var(--accent-green);
+        }
+
+        .criteria-card.pop .criteria-icon {
+            background: #ffb83011;
+            color: var(--accent-amber);
+        }
+
+        .criteria-card.grid .criteria-icon {
+            background: #a78bfa11;
+            color: #a78bfa;
+        }
+
+        .criteria-info {
+            flex: 1;
+        }
+
+        .criteria-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .criteria-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .criteria-weight {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--accent-cyan);
+            font-weight: 500;
+            background: #00d4ff0d;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Workflow steps */
+        .workflow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .step-connector {
+            position: absolute;
+            left: 15px;
+            top: 28px;
+            bottom: -8px;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .step-connector.done {
+            background: var(--accent-cyan);
+        }
+
+        .step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            background: var(--bg-card);
+            transition: var(--transition);
+        }
+
+        .step-num.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 8px #00d4ff44;
+            animation: step-pulse 1.5s infinite;
+        }
+
+        .step-num.done {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: #00ff9d0d;
+        }
+
+        @keyframes step-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px #00d4ff44;
+            }
+
+            50% {
+                box-shadow: 0 0 16px #00d4ffaa;
+            }
+        }
+
+        .step-body {
+            flex: 1;
+            padding-bottom: 4px;
+        }
+
+        .step-tool {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .step-info {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .metric-val {
+            font-family: var(--font-mono);
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .metric-val.cyan {
+            color: var(--accent-cyan);
+        }
+
+        .metric-val.green {
+            color: var(--accent-green);
+        }
+
+        .metric-val.amber {
+            color: var(--accent-amber);
+        }
+
+        .metric-val.purple {
+            color: #a78bfa;
+        }
+
+        .metric-lbl {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ─── MAP ───────────────────────────────────────────── */
+        #map-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Leaflet dark override */
+        .leaflet-tile-pane {
+            filter: brightness(0.7) saturate(0.6) hue-rotate(200deg);
+        }
+
+        /* Floating map toolbar */
+        #map-toolbar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .map-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            box-shadow: 0 2px 10px #0006;
+        }
+
+        .map-btn:hover {
+            background: var(--bg-card);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px #00d4ff22;
+        }
+
+        .map-btn.active {
+            background: #00d4ff15;
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        /* Legend */
+        #legend {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            z-index: 500;
+            background: #0a1628ee;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            min-width: 160px;
+            backdrop-filter: blur(12px);
+        }
+
+        .legend-title {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px currentColor;
+        }
+
+        .legend-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Score gradient bar */
+        .score-bar {
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 10px;
+            background: linear-gradient(90deg, #ff4d6d, #ffb830, #00ff9d);
+        }
+
+        .score-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 9px;
+            color: var(--text-dim);
+        }
+
+        /* Coordinates bar */
+        #coords-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            z-index: 500;
+            background: #0a1628cc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+            display: flex;
+            gap: 14px;
+        }
+
+        #coords-bar span {
+            color: var(--text-dim);
+            font-size: 10px;
+        }
+
+        /* ─── RIGHT PANEL ───────────────────────────────────── */
+        #right-panel {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        #right-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #right-panel::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* Location results */
+        .location-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-card:hover {
+            background: var(--bg-card-hover);
+            border-color: #2a5580;
+        }
+
+        .location-card.selected {
+            border-color: var(--accent-cyan);
+            background: #00d4ff08;
+            box-shadow: 0 0 14px #00d4ff1a;
+        }
+
+        .location-rank {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .location-score {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .location-coords {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 3px;
+        }
+
+        .score-fill {
+            height: 3px;
+            border-radius: 2px;
+            margin-top: 8px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            transition: var(--transition);
+        }
+
+        /* Analysis log */
+        #log-area {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-height: 160px;
+            overflow-y: auto;
+            margin: 0 16px 16px;
+        }
+
+        #log-area::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #log-area::-webkit-scrollbar-thumb {
+            background: var(--border);
+        }
+
+        .log-line {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-ts {
+            color: var(--text-dim);
+        }
+
+        .log-msg.ok {
+            color: var(--accent-green);
+        }
+
+        .log-msg.info {
+            color: var(--accent-cyan);
+        }
+
+        .log-msg.warn {
+            color: var(--accent-amber);
+        }
+
+        .log-msg.err {
+            color: var(--accent-red);
+        }
+
+        /* ─── LOADING OVERLAY ───────────────────────────────── */
+        #loading-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: #050d1acc;
+            z-index: 900;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        #loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner-ring {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-cyan);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .loading-sub {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+        }
+
+        /* ─── TOAST ──────────────────────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            box-shadow: 0 8px 32px #000a;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        #toast.show {
+            opacity: 1;
+        }
+
+        #toast.success {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        #toast.error {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        /* ─── LAYER CHIPS ────────────────────────────────────── */
+        .layer-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .layer-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .layer-chip .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .layer-chip:hover {
+            border-color: #2a5580;
+            color: var(--text-primary);
+        }
+
+        .layer-chip.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: #00d4ff0d;
+        }
+
+        /* ─── MISC ───────────────────────────────────────────── */
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .small-badge {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 10px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .badge-green {
+            background: #00ff9d15;
+            color: var(--accent-green);
+            border: 1px solid #00ff9d33;
+        }
+
+        .badge-cyan {
+            background: #00d4ff15;
+            color: var(--accent-cyan);
+            border: 1px solid #00d4ff33;
+        }
+    </style>
 </head>
+
 <body>
-<div id="app">
+    <div id="app">
 
-  <!-- ══ TOP BAR ══════════════════════════════════════════ -->
-  <header id="topbar">
-    <div class="brand">
-      <div class="brand-icon">
-        <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-name">Geo<span>Spatial</span> AI</div>
-        <div class="brand-tag">EV Site Intelligence Engine</div>
-      </div>
+        <!-- ══ TOP BAR ══════════════════════════════════════════ -->
+        <header id="topbar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path
+                            d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Geo<span>Spatial</span> AI</div>
+                    <div class="brand-tag">EV Site Intelligence Engine</div>
+                </div>
+            </div>
+
+            <div class="topbar-center" id="topbar-center-wrap">
+                <svg width="14" height="14" fill="none" stroke="var(--text-dim)" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input type="text" id="place-input" placeholder="Search any city in India… (e.g. Pune, Hyderabad)"
+                    autocomplete="off" />
+                <div class="geo-spinner" id="geo-spinner"></div>
+                <div id="geo-dropdown"></div>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="status-dot"></div>
+                <span class="status-label">Engine Ready</span>
+                <div class="small-badge badge-green">RAG Active</div>
+                <div class="small-badge badge-cyan">GEE Connected</div>
+            </div>
+        </header>
+
+        <!-- ══ MAIN ═════════════════════════════════════════════ -->
+        <div id="main">
+
+            <!-- ── LEFT SIDEBAR ── -->
+            <aside id="sidebar">
+
+                <!-- Query -->
+                <div class="panel-section">
+                    <div class="section-label">Spatial Query</div>
+                    <div class="query-area">
+                        <textarea id="query-input"
+                            placeholder="e.g. Find suitable EV charging locations near highways …">Find suitable EV charging station locations near major roads</textarea>
+                        <div class="query-footer">
+                            <span class="query-hint">RAG + LLM powered</span>
+                            <button id="run-btn" onclick="runAnalysis()">
+                                <span id="run-btn-icon">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <polygon points="5 3 19 12 5 21 5 3" />
+                                    </svg>
+                                </span>
+                                <span>Run Analysis</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Criteria weights -->
+                <div class="panel-section">
+                    <div class="section-label">Suitability Criteria</div>
+
+                    <div class="criteria-card road">
+                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M3 3h5l3 18h2l3-18h5" />
+                            </svg></div>
+                        <div class="criteria-info">
+                            <div class="criteria-name">Road Proximity</div>
+                            <div class="criteria-desc">Distance to major roads</div>
+                        </div>
+                        <div class="criteria-weight">60%</div>
+                    </div>
+
+                    <div class="criteria-card slope">
+                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M3 20L21 4M21 4H9M21 4v12" />
+                            </svg></div>
+                        <div class="criteria-info">
+                            <div class="criteria-name">Terrain Slope</div>
+                            <div class="criteria-desc">DEM-based slope analysis</div>
+                        </div>
+                        <div class="criteria-weight">40%</div>
+                    </div>
+
+                    <div class="criteria-card pop" style="opacity:0.45;">
+                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg></div>
+                        <div class="criteria-info">
+                            <div class="criteria-name">Population Density</div>
+                            <div class="criteria-desc">Coming soon</div>
+                        </div>
+                        <div class="criteria-weight">—</div>
+                    </div>
+
+                    <div class="criteria-card grid" style="opacity:0.45;">
+                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="2" y="7" width="20" height="14" rx="2" />
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                            </svg></div>
+                        <div class="criteria-info">
+                            <div class="criteria-name">Grid Infrastructure</div>
+                            <div class="criteria-desc">Coming soon</div>
+                        </div>
+                        <div class="criteria-weight">—</div>
+                    </div>
+                </div>
+
+                <!-- Weight sliders -->
+                <div class="panel-section">
+                    <div class="section-label">Weight Tuning</div>
+                    <div class="param-row">
+                        <div class="param-label">Road Proximity <span class="param-val" id="w-road-val">60%</span></div>
+                        <input type="range" id="w-road" min="0" max="100" value="60"
+                            oninput="syncWeights(this, 'w-road-val', 'w-slope', 'w-slope-val')" />
+                    </div>
+                    <div class="param-row">
+                        <div class="param-label">Terrain Slope <span class="param-val" id="w-slope-val">40%</span></div>
+                        <input type="range" id="w-slope" min="0" max="100" value="40"
+                            oninput="syncWeights(this, 'w-slope-val', 'w-road', 'w-road-val')" />
+                    </div>
+                    <div class="param-row">
+                        <div class="param-label">Top Locations <span class="param-val" id="n-loc-val">10</span></div>
+                        <input type="range" id="n-loc" min="1" max="20" value="10"
+                            oninput="document.getElementById('n-loc-val').textContent = this.value" />
+                    </div>
+                </div>
+
+                <!-- Layer control -->
+                <div class="panel-section">
+                    <div class="section-label">Map Layers</div>
+                    <div class="layer-chips">
+                        <div class="layer-chip active" id="lc-osm" onclick="toggleLayer('osm')">
+                            <div class="dot" style="background:#7da8cc"></div> Base OSM
+                        </div>
+                        <div class="layer-chip active" id="lc-ev" onclick="toggleLayer('ev')">
+                            <div class="dot" style="background:var(--accent-green)"></div> EV Sites
+                        </div>
+                        <div class="layer-chip" id="lc-heat" onclick="toggleLayer('heat')">
+                            <div class="dot" style="background:var(--accent-amber)"></div> Heat Map
+                        </div>
+                        <div class="layer-chip" id="lc-roads" onclick="toggleLayer('roads')">
+                            <div class="dot" style="background:var(--accent-cyan)"></div> Roads
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="panel-section">
+                    <div class="section-label">Analysis Metrics</div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-val cyan" id="m-sites">—</div>
+                            <div class="metric-lbl">Sites Found</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val green" id="m-score">—</div>
+                            <div class="metric-lbl">Top Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val amber" id="m-steps">—</div>
+                            <div class="metric-lbl">Workflow Steps</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val purple" id="m-time">—</div>
+                            <div class="metric-lbl">Exec Time (s)</div>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ── MAP ── -->
+            <div id="map-wrap">
+                <div id="map"></div>
+
+                <!-- Floating toolbar -->
+                <div id="map-toolbar">
+                    <div class="map-btn active" id="btn-select" title="Select" onclick="setTool('select')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M5 3l14 9-7 1-3 7z" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" id="btn-pin" title="Manual Pin (click map to add)" onclick="setTool('pin')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" id="btn-zoom-in" title="Zoom in" onclick="map.zoomIn()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35M11 8v6M8 11h6" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" id="btn-zoom-out" title="Zoom out" onclick="map.zoomOut()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35M8 11h6" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" title="Reset view" onclick="resetView()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" title="Satellite" onclick="toggleSatellite()" id="btn-sat">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M17.66 7.93A8 8 0 1 0 20 12h-3" />
+                            <path d="M10.48 3.14A6 6 0 0 1 15 9a6 6 0 0 1-6 6 6 6 0 0 1-5.14-2.88" />
+                        </svg>
+                    </div>
+                    <div class="map-btn" title="Clear manual pins" onclick="clearManualPins()" id="btn-clear-pins"
+                        style="display:none">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Coords bar -->
+                <div id="coords-bar">
+                    <span>LAT</span>&nbsp;<span id="coord-lat">19.0330</span>
+                    &nbsp;&nbsp;<span>LON</span>&nbsp;<span id="coord-lon">73.0297</span>
+                    &nbsp;&nbsp;<span>ZOOM</span>&nbsp;<span id="coord-zoom">12</span>
+                </div>
+
+                <!-- Legend -->
+                <div id="legend">
+                    <div class="legend-title">Suitability Score</div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--accent-green);color:var(--accent-green)"></div>
+                        <span class="legend-text">High (≥ 0.85)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--accent-amber);color:var(--accent-amber)"></div>
+                        <span class="legend-text">Medium (0.65–0.85)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--accent-red);color:var(--accent-red)"></div>
+                        <span class="legend-text">Low (&lt; 0.65)</span>
+                    </div>
+                    <div class="score-bar"></div>
+                    <div class="score-labels"><span>Low</span><span>High</span></div>
+                </div>
+
+                <!-- Loading -->
+                <div id="loading-overlay">
+                    <div class="spinner-ring"></div>
+                    <div class="loading-text" id="loading-title">Running GIS Analysis…</div>
+                    <div class="loading-sub" id="loading-sub">Initialising RAG pipeline</div>
+                </div>
+            </div>
+
+            <!-- ── RIGHT PANEL ── -->
+            <aside id="right-panel">
+                <div class="panel-section">
+                    <div class="section-label">Top Locations</div>
+                    <div id="locations-list">
+                        <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:24px 0;">
+                            Run analysis to see results
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section" style="padding: 16px 16px 8px;">
+                    <div class="section-label">Workflow Steps</div>
+                    <div id="workflow-list">
+                        <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:16px 0;">
+                            No workflow generated yet
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-label" style="padding: 0 16px; margin-top: 8px;">Analysis Log</div>
+                <div style="padding:0 16px 8px">
+                    <div
+                        style="font-size:10px;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.06em;text-transform:uppercase">
+                        Manual Pins</div>
+                    <div id="manual-pins-list">
+                        <div style="color:var(--text-dim);font-size:11px;text-align:center;padding:10px 0;">Enable 📍
+                            pin tool then click map</div>
+                    </div>
+                </div>
+            </aside>
+
+        </div><!-- /main -->
+    </div><!-- /app -->
+
+    <!-- Log area outside right-panel for sticky footer -->
+    <div id="log-area">
+        <div class="log-line"><span class="log-ts">00:00:00</span><span class="log-msg info">GeoSpatial AI engine
+                initialised</span></div>
+        <div class="log-line"><span class="log-ts">00:00:00</span><span class="log-msg ok">Leaflet map ready — India
+                view</span></div>
     </div>
 
-    <div class="topbar-center">
-      <svg width="14" height="14" fill="none" stroke="var(--text-dim)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="place-input" value="Navi Mumbai, Maharashtra, India" placeholder="Search region…" />
-    </div>
+    <div id="toast"></div>
 
-    <div class="topbar-actions">
-      <div class="status-dot"></div>
-      <span class="status-label">Engine Ready</span>
-      <div class="small-badge badge-green">RAG Active</div>
-      <div class="small-badge badge-cyan">GEE Connected</div>
-    </div>
-  </header>
+    <script>
+        // ─── MAP INIT ─ centered on India ──────────────────────────
+        const INDIA_CENTER = [22.5937, 80.9629];
+        const INDIA_ZOOM = 5;
 
-  <!-- ══ MAIN ═════════════════════════════════════════════ -->
-  <div id="main">
+        const map = L.map('map', {
+            center: INDIA_CENTER, zoom: INDIA_ZOOM,
+            zoomControl: false,
+            attributionControl: false
+        });
 
-    <!-- ── LEFT SIDEBAR ── -->
-    <aside id="sidebar">
+        const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap', maxZoom: 19
+        }).addTo(map);
 
-      <!-- Query -->
-      <div class="panel-section">
-        <div class="section-label">Spatial Query</div>
-        <div class="query-area">
-          <textarea id="query-input" placeholder="e.g. Find suitable EV charging locations near highways …">Find suitable EV charging station locations in Navi Mumbai near major roads</textarea>
-          <div class="query-footer">
-            <span class="query-hint">RAG + LLM powered</span>
-            <button id="run-btn" onclick="runAnalysis()">
-              <span id="run-btn-icon">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </span>
-              <span>Run Analysis</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        const satTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri', maxZoom: 19
+        });
 
-      <!-- Criteria weights -->
-      <div class="panel-section">
-        <div class="section-label">Suitability Criteria</div>
+        const evLayer = L.layerGroup().addTo(map);
+        const manualLayer = L.layerGroup().addTo(map);
+        let satMode = false;
+        let currentTool = 'select';
+        let manualPins = [];   // [{latlng, marker, id}]
 
-        <div class="criteria-card road">
-          <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h5l3 18h2l3-18h5"/></svg></div>
-          <div class="criteria-info">
-            <div class="criteria-name">Road Proximity</div>
-            <div class="criteria-desc">Distance to major roads</div>
-          </div>
-          <div class="criteria-weight">60%</div>
-        </div>
+        // Coords bar update
+        map.on('mousemove', e => {
+            document.getElementById('coord-lat').textContent = e.latlng.lat.toFixed(5);
+            document.getElementById('coord-lon').textContent = e.latlng.lng.toFixed(5);
+        });
+        map.on('zoomend', () => {
+            document.getElementById('coord-zoom').textContent = map.getZoom();
+        });
 
-        <div class="criteria-card slope">
-          <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 20L21 4M21 4H9M21 4v12"/></svg></div>
-          <div class="criteria-info">
-            <div class="criteria-name">Terrain Slope</div>
-            <div class="criteria-desc">DEM-based slope analysis</div>
-          </div>
-          <div class="criteria-weight">40%</div>
-        </div>
+        // ─── TOOL SELECTOR ───────────────────────────────────────
+        function setTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('btn-' + t);
+            if (btn) btn.classList.add('active');
 
-        <div class="criteria-card pop" style="opacity:0.45;">
-          <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div class="criteria-info">
-            <div class="criteria-name">Population Density</div>
-            <div class="criteria-desc">Coming soon</div>
-          </div>
-          <div class="criteria-weight">—</div>
-        </div>
+            // Show/hide crosshair cursor
+            document.getElementById('map').style.cursor = (t === 'pin') ? 'crosshair' : '';
 
-        <div class="criteria-card grid" style="opacity:0.45;">
-          <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
-          <div class="criteria-info">
-            <div class="criteria-name">Grid Infrastructure</div>
-            <div class="criteria-desc">Coming soon</div>
-          </div>
-          <div class="criteria-weight">—</div>
-        </div>
-      </div>
+            // Show trash button when any pins exist or pin mode active
+            const showTrash = (t === 'pin') || manualPins.length > 0;
+            document.getElementById('btn-clear-pins').style.display = showTrash ? 'flex' : 'none';
 
-      <!-- Weight sliders -->
-      <div class="panel-section">
-        <div class="section-label">Weight Tuning</div>
-        <div class="param-row">
-          <div class="param-label">Road Proximity <span class="param-val" id="w-road-val">60%</span></div>
-          <input type="range" id="w-road" min="0" max="100" value="60" oninput="syncWeights(this, 'w-road-val', 'w-slope', 'w-slope-val')" />
-        </div>
-        <div class="param-row">
-          <div class="param-label">Terrain Slope <span class="param-val" id="w-slope-val">40%</span></div>
-          <input type="range" id="w-slope" min="0" max="100" value="40" oninput="syncWeights(this, 'w-slope-val', 'w-road', 'w-road-val')" />
-        </div>
-        <div class="param-row">
-          <div class="param-label">Top Locations <span class="param-val" id="n-loc-val">10</span></div>
-          <input type="range" id="n-loc" min="1" max="20" value="10" oninput="document.getElementById('n-loc-val').textContent = this.value" />
-        </div>
-      </div>
+            if (t === 'pin') {
+                log('Pin mode active — click map to place EV candidate', 'info');
+                showToast('📍 Click the map to place EV candidate pins', '');
+            }
+        }
 
-      <!-- Layer control -->
-      <div class="panel-section">
-        <div class="section-label">Map Layers</div>
-        <div class="layer-chips">
-          <div class="layer-chip active" id="lc-osm" onclick="toggleLayer('osm')">
-            <div class="dot" style="background:#7da8cc"></div> Base OSM
-          </div>
-          <div class="layer-chip active" id="lc-ev" onclick="toggleLayer('ev')">
-            <div class="dot" style="background:var(--accent-green)"></div> EV Sites
-          </div>
-          <div class="layer-chip" id="lc-heat" onclick="toggleLayer('heat')">
-            <div class="dot" style="background:var(--accent-amber)"></div> Heat Map
-          </div>
-          <div class="layer-chip" id="lc-roads" onclick="toggleLayer('roads')">
-            <div class="dot" style="background:var(--accent-cyan)"></div> Roads
-          </div>
-        </div>
-      </div>
+        function resetView() { map.flyTo(INDIA_CENTER, INDIA_ZOOM, { duration: 1.2 }); }
 
-      <!-- Metrics -->
-      <div class="panel-section">
-        <div class="section-label">Analysis Metrics</div>
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-val cyan" id="m-sites">—</div>
-            <div class="metric-lbl">Sites Found</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-val green" id="m-score">—</div>
-            <div class="metric-lbl">Top Score</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-val amber" id="m-steps">—</div>
-            <div class="metric-lbl">Workflow Steps</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-val purple" id="m-time">—</div>
-            <div class="metric-lbl">Exec Time (s)</div>
-          </div>
-        </div>
-      </div>
+        function toggleSatellite() {
+            satMode = !satMode;
+            const btn = document.getElementById('btn-sat');
+            if (satMode) {
+                map.removeLayer(osmTile);
+                satTile.addTo(map);
+                btn.classList.add('active');
+            } else {
+                map.removeLayer(satTile);
+                osmTile.addTo(map);
+                btn.classList.remove('active');
+            }
+        }
 
-    </aside>
+        // ─── NOMINATIM GEOCODER ──────────────────────────────────
+        let geoTimer = null;
+        let selectedPlace = '';
 
-    <!-- ── MAP ── -->
-    <div id="map-wrap">
-      <div id="map"></div>
+        const placeInput = document.getElementById('place-input');
+        const geoDropdown = document.getElementById('geo-dropdown');
+        const geoSpinner = document.getElementById('geo-spinner');
+        const topbarWrap = document.getElementById('topbar-center-wrap');
 
-      <!-- Floating toolbar -->
-      <div id="map-toolbar">
-        <div class="map-btn active" id="btn-select" title="Select" onclick="setTool('select')">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3l14 9-7 1-3 7z"/></svg>
-        </div>
-        <div class="map-btn" id="btn-zoom-in" title="Zoom in" onclick="map.zoomIn()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/></svg>
-        </div>
-        <div class="map-btn" id="btn-zoom-out" title="Zoom out" onclick="map.zoomOut()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6"/></svg>
-        </div>
-        <div class="map-btn" title="Reset view" onclick="resetView()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </div>
-        <div class="map-btn" title="Satellite" onclick="toggleSatellite()" id="btn-sat">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 12"/><circle cx="12" cy="12" r="3"/><path d="M17.66 7.93A8 8 0 1 0 20 12h-3"/><path d="M10.48 3.14A6 6 0 0 1 15 9a6 6 0 0 1-6 6 6 6 0 0 1-5.14-2.88"/></svg>
-        </div>
-      </div>
+        placeInput.addEventListener('input', () => {
+            clearTimeout(geoTimer);
+            const q = placeInput.value.trim();
+            if (q.length < 3) { closeGeoDropdown(); return; }
+            geoTimer = setTimeout(() => geocodeSearch(q), 450);
+        });
 
-      <!-- Coords bar -->
-      <div id="coords-bar">
-        <span>LAT</span>&nbsp;<span id="coord-lat">19.0330</span>
-        &nbsp;&nbsp;<span>LON</span>&nbsp;<span id="coord-lon">73.0297</span>
-        &nbsp;&nbsp;<span>ZOOM</span>&nbsp;<span id="coord-zoom">12</span>
-      </div>
+        placeInput.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeGeoDropdown();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const q = placeInput.value.trim();
+                if (q) geocodeSearch(q, true);
+            }
+        });
 
-      <!-- Legend -->
-      <div id="legend">
-        <div class="legend-title">Suitability Score</div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:var(--accent-green);color:var(--accent-green)"></div>
-          <span class="legend-text">High (≥ 0.85)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:var(--accent-amber);color:var(--accent-amber)"></div>
-          <span class="legend-text">Medium (0.65–0.85)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:var(--accent-red);color:var(--accent-red)"></div>
-          <span class="legend-text">Low (&lt; 0.65)</span>
-        </div>
-        <div class="score-bar"></div>
-        <div class="score-labels"><span>Low</span><span>High</span></div>
-      </div>
+        document.addEventListener('click', e => {
+            if (!topbarWrap.contains(e.target)) closeGeoDropdown();
+        });
 
-      <!-- Loading -->
-      <div id="loading-overlay">
-        <div class="spinner-ring"></div>
-        <div class="loading-text" id="loading-title">Running GIS Analysis…</div>
-        <div class="loading-sub" id="loading-sub">Initialising RAG pipeline</div>
-      </div>
-    </div>
+        function closeGeoDropdown() {
+            geoDropdown.classList.remove('open');
+            topbarWrap.classList.remove('searching');
+        }
 
-    <!-- ── RIGHT PANEL ── -->
-    <aside id="right-panel">
-      <div class="panel-section">
-        <div class="section-label">Top Locations</div>
-        <div id="locations-list">
-          <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:24px 0;">
-            Run analysis to see results
-          </div>
-        </div>
-      </div>
+        async function geocodeSearch(q, autoSelect = false) {
+            geoSpinner.classList.add('active');
+            topbarWrap.classList.add('searching');
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', India')}&format=json&limit=6&addressdetails=1&countrycodes=in`;
+                const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+                const data = await res.json();
 
-      <div class="panel-section" style="padding: 16px 16px 8px;">
-        <div class="section-label">Workflow Steps</div>
-        <div id="workflow-list">
-          <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:16px 0;">
-            No workflow generated yet
-          </div>
-        </div>
-      </div>
+                if (!data.length) {
+                    geoDropdown.innerHTML = '<div class="geo-option"><div class="geo-option-main" style="color:var(--text-dim)">No results found for “' + q + '”</div></div>';
+                    geoDropdown.classList.add('open');
+                    return;
+                }
 
-      <div class="section-label" style="padding: 0 16px; margin-top: 8px;">Analysis Log</div>
-    </aside>
+                if (autoSelect) { selectGeoPlace(data[0]); return; }
 
-  </div><!-- /main -->
-</div><!-- /app -->
+                geoDropdown.innerHTML = '';
+                data.forEach(item => {
+                    const parts = item.display_name.split(',');
+                    const label = parts.slice(0, 3).join(',');
+                    const sub = parts.slice(3, 5).join(',').trim();
+                    const opt = document.createElement('div');
+                    opt.className = 'geo-option';
+                    opt.innerHTML = `
+                        <div class="geo-option-main">${label}</div>
+                        ${sub ? `<div class="geo-option-sub">${sub}</div>` : ''}
+                    `;
+                    opt.onclick = () => selectGeoPlace(item);
+                    geoDropdown.appendChild(opt);
+                });
+                geoDropdown.classList.add('open');
+            } catch (err) {
+                log('Geocoder error: ' + err.message, 'err');
+            } finally {
+                geoSpinner.classList.remove('active');
+            }
+        }
 
-<!-- Log area outside right-panel for sticky footer -->
-<div id="log-area">
-  <div class="log-line"><span class="log-ts">00:00:00</span><span class="log-msg info">GeoSpatial AI engine initialised</span></div>
-  <div class="log-line"><span class="log-ts">00:00:00</span><span class="log-msg ok">Leaflet map loaded — Navi Mumbai</span></div>
-</div>
+        function selectGeoPlace(item) {
+            const parts = item.display_name.split(',');
+            const shortName = parts.slice(0, 3).join(', ');
+            const cityName = item.address?.city || item.address?.town ||
+                item.address?.village || parts[0].trim();
+            placeInput.value = shortName;
+            selectedPlace = shortName;
+            closeGeoDropdown();
 
-<div id="toast"></div>
+            // Pan map to geocoded location
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            const zoom = ['city', 'town'].includes(item.type) ? 12 : item.class === 'boundary' ? 11 : 13;
+            map.flyTo([lat, lon], zoom, { duration: 1.4 });
 
-<script>
-// ─── MAP INIT ────────────────────────────────────────────
-const MAP_CENTER = [19.0330, 73.0297];
-const MAP_ZOOM   = 12;
+            // Auto-update query textarea
+            document.getElementById('query-input').value =
+                `Find suitable EV charging station locations in ${cityName} near major roads`;
 
-const map = L.map('map', {
-  center: MAP_CENTER, zoom: MAP_ZOOM,
-  zoomControl: false,
-  attributionControl: false
-});
+            log(`Location set: ${shortName}`, 'ok');
+            showToast(`📍 ${cityName} — click Run Analysis or press Ctrl+Enter`, 'success');
+        }
 
-const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap', maxZoom: 19
-}).addTo(map);
+        // ─── MANUAL LOCATION PICKER ──────────────────────────────
+        map.on('click', e => {
+            if (currentTool !== 'pin') return;
+            addManualPin(e.latlng);
+        });
 
-const satTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: '© Esri', maxZoom: 19
-});
+        function addManualPin(latlng) {
+            const id = Date.now();
+            const idx = manualPins.length + 1;
+            const color = '#ffb830';
 
-const evLayer = L.layerGroup().addTo(map);
-let satMode = false;
-
-// Coords update
-map.on('mousemove', e => {
-  document.getElementById('coord-lat').textContent  = e.latlng.lat.toFixed(5);
-  document.getElementById('coord-lon').textContent  = e.latlng.lng.toFixed(5);
-});
-map.on('zoomend', () => {
-  document.getElementById('coord-zoom').textContent = map.getZoom();
-});
-
-// ─── TOOLS ──────────────────────────────────────────────
-function setTool(t) {
-  document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + t)?.classList.add('active');
-}
-
-function resetView() { map.flyTo(MAP_CENTER, MAP_ZOOM, {duration: 1.2}); }
-
-function toggleSatellite() {
-  satMode = !satMode;
-  const btn = document.getElementById('btn-sat');
-  if (satMode) {
-    map.removeLayer(osmTile);
-    satTile.addTo(map);
-    btn.classList.add('active');
-  } else {
-    map.removeLayer(satTile);
-    osmTile.addTo(map);
-    btn.classList.remove('active');
-  }
-}
-
-// ─── LAYER TOGGLE ───────────────────────────────────────
-const layerStates = { osm: true, ev: true, heat: false, roads: false };
-function toggleLayer(id) {
-  layerStates[id] = !layerStates[id];
-  const chip = document.getElementById('lc-' + id);
-  chip.classList.toggle('active', layerStates[id]);
-  if (id === 'ev') {
-    layerStates.ev ? evLayer.addTo(map) : map.removeLayer(evLayer);
-  }
-}
-
-// ─── WEIGHT SYNC ────────────────────────────────────────
-function syncWeights(src, srcLabel, otherId, otherLabel) {
-  const val = parseInt(src.value);
-  const other = document.getElementById(otherId);
-  const otherVal = 100 - val;
-  other.value = otherVal;
-  document.getElementById(srcLabel).textContent   = val + '%';
-  document.getElementById(otherLabel).textContent = otherVal + '%';
-}
-
-// ─── LOG ─────────────────────────────────────────────────
-function log(msg, type = 'info') {
-  const area = document.getElementById('log-area');
-  const now = new Date();
-  const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
-    .map(n => String(n).padStart(2, '0')).join(':');
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  line.innerHTML = `<span class="log-ts">${ts}</span><span class="log-msg ${type}">${msg}</span>`;
-  area.appendChild(line);
-  area.scrollTop = area.scrollHeight;
-}
-
-// ─── TOAST ──────────────────────────────────────────────
-let toastTimer;
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast ' + type;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ─── LOADING ─────────────────────────────────────────────
-const LOADING_MSGS = [
-  'Initialising RAG pipeline…',
-  'Encoding spatial query…',
-  'Retrieving GIS knowledge…',
-  'Generating workflow with LLM…',
-  'Fetching DEM from Google Earth Engine…',
-  'Loading OSM road network…',
-  'Computing road distance raster…',
-  'Normalising terrain slope…',
-  'Running weighted overlay…',
-  'Extracting top candidate sites…',
-];
-let loadingInterval;
-
-function startLoading() {
-  document.getElementById('loading-overlay').classList.add('active');
-  let i = 0;
-  document.getElementById('loading-sub').textContent = LOADING_MSGS[0];
-  loadingInterval = setInterval(() => {
-    i = (i + 1) % LOADING_MSGS.length;
-    document.getElementById('loading-sub').textContent = LOADING_MSGS[i];
-  }, 1800);
-}
-
-function stopLoading() {
-  clearInterval(loadingInterval);
-  document.getElementById('loading-overlay').classList.remove('active');
-}
-
-// ─── MARKER ──────────────────────────────────────────────
-function scoreColor(s) {
-  if (s >= 0.85) return '#00ff9d';
-  if (s >= 0.65) return '#ffb830';
-  return '#ff4d6d';
-}
-
-function makeMarker(loc, rank) {
-  const color = scoreColor(loc.score);
-  const icon = L.divIcon({
-    className: '',
-    html: `<div style="
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="
       width:28px;height:28px;border-radius:50%;
       background:${color}22;border:2px solid ${color};
       display:flex;align-items:center;justify-content:center;
       color:${color};font-weight:700;font-size:10px;
       font-family:'JetBrains Mono',monospace;
-      box-shadow:0 0 12px ${color}88;
+      box-shadow:0 0 12px ${color}99;
+      cursor:pointer;
+    ">P${idx}</div>`,
+                iconSize: [28, 28], iconAnchor: [14, 14]
+            });
+
+            const marker = L.marker([latlng.lat, latlng.lng], { icon })
+                .bindPopup(`
+      <div style="font-family:'Inter',sans-serif;min-width:120px">
+        <div style="font-weight:700;color:#ffb830;margin-bottom:4px">📍 Manual Pin ${idx}</div>
+        <div style="font-size:10px;color:#aaa">${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}</div>
+      </div>`)
+                .addTo(manualLayer);
+
+            const pin = { id, latlng, marker, idx };
+            manualPins.push(pin);
+            renderManualPins();
+            log(`Manual pin ${idx} placed at ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`, 'warn');
+            document.getElementById('btn-clear-pins').style.display = 'flex';
+        }
+
+        function removeManualPin(id) {
+            const entry = manualPins.find(p => p.id === id);
+            if (entry) manualLayer.removeLayer(entry.marker);
+            manualPins = manualPins.filter(p => p.id !== id);
+            renderManualPins();
+            if (manualPins.length === 0 && currentTool !== 'pin') {
+                document.getElementById('btn-clear-pins').style.display = 'none';
+            }
+        }
+
+        function clearManualPins() {
+            manualPins.forEach(p => manualLayer.removeLayer(p.marker));
+            manualPins = [];
+            renderManualPins();
+            document.getElementById('btn-clear-pins').style.display = 'none';
+            log('All manual pins cleared', 'warn');
+        }
+
+        function renderManualPins() {
+            const list = document.getElementById('manual-pins-list');
+            if (!manualPins.length) {
+                list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:10px 0;">Enable 📍 pin tool then click map</div>';
+                return;
+            }
+            list.innerHTML = '';
+            manualPins.forEach(p => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1a3a5c';
+                row.innerHTML = `
+      <div style="width:22px;height:22px;border-radius:50%;background:#ffb83022;border:1.5px solid #ffb830;
+                  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;
+                  color:#ffb830;font-family:'JetBrains Mono',monospace;flex-shrink:0">P${p.idx}</div>
+      <div style="flex:1">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#7da8cc">
+          ${p.latlng.lat.toFixed(4)}, ${p.latlng.lng.toFixed(4)}
+        </div>
+      </div>
+      <button onclick="removeManualPin(${p.id})" title="Remove" style="
+        background:none;border:none;cursor:pointer;color:#3a6080;font-size:14px;
+        padding:0 2px;line-height:1;transition:color 0.2s"
+        onmouseover="this.style.color='#ff4d6d'" onmouseout="this.style.color='#3a6080'">✕</button>
+    `;
+                row.addEventListener('click', ev => {
+                    if (ev.target.tagName !== 'BUTTON') {
+                        map.flyTo([p.latlng.lat, p.latlng.lng], 16, { duration: 0.8 });
+                        p.marker.openPopup();
+                    }
+                });
+                row.style.cursor = 'pointer';
+                list.appendChild(row);
+            });
+        }
+
+        // ─── LAYER TOGGLE ───────────────────────────────────────
+        const layerStates = { osm: true, ev: true, heat: false, roads: false };
+        function toggleLayer(id) {
+            layerStates[id] = !layerStates[id];
+            const chip = document.getElementById('lc-' + id);
+            chip.classList.toggle('active', layerStates[id]);
+            if (id === 'ev') {
+                layerStates.ev ? evLayer.addTo(map) : map.removeLayer(evLayer);
+            }
+        }
+
+        // ─── WEIGHT SYNC ────────────────────────────────────────
+        function syncWeights(src, srcLabel, otherId, otherLabel) {
+            const val = parseInt(src.value);
+            const other = document.getElementById(otherId);
+            const otherVal = 100 - val;
+            other.value = otherVal;
+            document.getElementById(srcLabel).textContent = val + '%';
+            document.getElementById(otherLabel).textContent = otherVal + '%';
+        }
+
+        // ─── LOG ─────────────────────────────────────────────────
+        function log(msg, type = 'info') {
+            const area = document.getElementById('log-area');
+            const now = new Date();
+            const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
+                .map(n => String(n).padStart(2, '0')).join(':');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-ts">${ts}</span><span class="log-msg ${type}">${msg}</span>`;
+            area.appendChild(line);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // ─── TOAST ──────────────────────────────────────────────
+        let toastTimer;
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = 'toast show ' + type;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        // ─── LOADING ─────────────────────────────────────────────
+        const LOADING_MSGS = [
+            'Encoding spatial query with RAG…',
+            'Retrieving GIS knowledge base…',
+            'Generating workflow with LLM…',
+            'Fetching DEM from Google Earth Engine…',
+            'Downloading slope raster (SRTM 30m)…',
+            'Loading OSM drive network…',
+            'Rasterising road geometry…',
+            'Computing Euclidean distance transform…',
+            'Normalising terrain slope layer…',
+            'Running weighted overlay (60/40)…',
+            'Extracting top candidate locations…',
+        ];
+        let loadingInterval;
+
+        function startLoading(title) {
+            document.getElementById('loading-title').textContent = title || 'Running GIS Analysis…';
+            document.getElementById('loading-overlay').classList.add('active');
+            let i = 0;
+            document.getElementById('loading-sub').textContent = LOADING_MSGS[0];
+            loadingInterval = setInterval(() => {
+                i = (i + 1) % LOADING_MSGS.length;
+                document.getElementById('loading-sub').textContent = LOADING_MSGS[i];
+            }, 1800);
+        }
+
+        function stopLoading() {
+            clearInterval(loadingInterval);
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        // ─── MARKER ──────────────────────────────────────────────
+        function scoreColor(s) {
+            if (s >= 0.85) return '#00ff9d';
+            if (s >= 0.65) return '#ffb830';
+            return '#ff4d6d';
+        }
+
+        function makeMarker(loc, rank) {
+            const color = scoreColor(loc.score);
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="
+      width:30px;height:30px;border-radius:50%;
+      background:${color}22;border:2px solid ${color};
+      display:flex;align-items:center;justify-content:center;
+      color:${color};font-weight:700;font-size:10px;
+      font-family:'JetBrains Mono',monospace;
+      box-shadow:0 0 14px ${color}99;
       cursor:pointer;
     ">${rank}</div>`,
-    iconSize: [28, 28], iconAnchor: [14, 14]
-  });
-  return L.marker([loc.latitude, loc.longitude], { icon });
-}
+                iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+            return L.marker([loc.latitude, loc.longitude], { icon });
+        }
 
-// ─── LOCATION CARDS ─────────────────────────────────────
-function renderLocations(data) {
-  const list = document.getElementById('locations-list');
-  list.innerHTML = '';
-  data.forEach((loc, i) => {
-    const color = scoreColor(loc.score);
-    const pct = (loc.score * 100).toFixed(1);
-    const card = document.createElement('div');
-    card.className = 'location-card';
-    card.id = 'loc-' + i;
-    card.innerHTML = `
-      <div class="location-rank">#${i+1}</div>
+        // ─── LOCATION CARDS ──────────────────────────────────────
+        function renderLocations(data) {
+            const list = document.getElementById('locations-list');
+            list.innerHTML = '';
+            data.forEach((loc, i) => {
+                const color = scoreColor(loc.score);
+                const pct = (loc.score * 100).toFixed(1);
+                const card = document.createElement('div');
+                card.className = 'location-card';
+                card.id = 'loc-' + i;
+                card.innerHTML = `
+      <div class="location-rank">#${i + 1}</div>
       <div class="location-score">${pct}<span style="font-size:11px;color:var(--text-dim)">%</span></div>
       <div class="location-coords">${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}</div>
       <div class="score-fill" style="width:${pct}%;background:linear-gradient(90deg,${color},${color}88)"></div>
     `;
-    card.onclick = () => {
-      document.querySelectorAll('.location-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      map.flyTo([loc.latitude, loc.longitude], 15, {duration: 1});
-    };
-    list.appendChild(card);
-  });
-}
+                card.onclick = () => {
+                    document.querySelectorAll('.location-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    map.flyTo([loc.latitude, loc.longitude], 15, { duration: 1 });
+                };
+                list.appendChild(card);
+            });
+        }
 
-// ─── WORKFLOW PANEL ──────────────────────────────────────
-function renderWorkflow(steps) {
-  const list = document.getElementById('workflow-list');
-  list.innerHTML = '';
-  steps.forEach((step, i) => {
-    const isLast = i === steps.length - 1;
-    const wrap = document.createElement('div');
-    wrap.className = 'workflow-step';
-    wrap.id = 'ws-' + i;
-    wrap.innerHTML = `
+        // ─── WORKFLOW PANEL ──────────────────────────────────────
+        function renderWorkflow(steps) {
+            const list = document.getElementById('workflow-list');
+            list.innerHTML = '';
+            steps.forEach((step, i) => {
+                const isLast = i === steps.length - 1;
+                const wrap = document.createElement('div');
+                wrap.className = 'workflow-step';
+                wrap.id = 'ws-' + i;
+                wrap.innerHTML = `
       ${!isLast ? '<div class="step-connector"></div>' : ''}
       <div class="step-num" id="sn-${i}">${step.step_id}</div>
       <div class="step-body">
@@ -920,138 +1815,354 @@ function renderWorkflow(steps) {
         <div class="step-info">${Object.values(step.outputs || {}).join(', ') || '—'}</div>
       </div>
     `;
-    list.appendChild(wrap);
-  });
-}
-
-function animateWorkflow(steps, cb) {
-  let i = 0;
-  function tick() {
-    if (i > 0) {
-      const prev = document.getElementById('sn-' + (i - 1));
-      if (prev) {
-        prev.classList.remove('active');
-        prev.classList.add('done');
-      }
-      const conn = document.querySelector(`#ws-${i-1} .step-connector`);
-      if (conn) conn.classList.add('done');
-    }
-    if (i < steps.length) {
-      const cur = document.getElementById('sn-' + i);
-      if (cur) cur.classList.add('active');
-      log(`Executing: ${steps[i].tool}`, 'info');
-      i++;
-      setTimeout(tick, 600 + Math.random() * 400);
-    } else {
-      cb && cb();
-    }
-  }
-  tick();
-}
-
-// ─── MAIN ANALYSIS ───────────────────────────────────────
-let startTime;
-
-async function runAnalysis() {
-  const btn = document.getElementById('run-btn');
-  btn.classList.add('loading');
-  evLayer.clearLayers();
-  document.getElementById('m-sites').textContent = '—';
-  document.getElementById('m-score').textContent = '—';
-  document.getElementById('m-steps').textContent = '—';
-  document.getElementById('m-time').textContent  = '—';
-
-  startTime = Date.now();
-  startLoading();
-  log('Analysis started', 'info');
-
-  try {
-    const res  = await fetch('/run-analysis');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    stopLoading();
-
-    if (!Array.isArray(data) || data.length === 0) {
-      throw new Error('No locations returned');
-    }
-
-    // Render locations
-    renderLocations(data);
-
-    // Place markers
-    data.forEach((loc, i) => {
-      const marker = makeMarker(loc, i + 1);
-      marker.bindPopup(`
-        <div style="font-family:'Inter',sans-serif;min-width:140px">
-          <div style="font-weight:700;font-size:13px;color:#00ff9d;margin-bottom:6px">Site #${i+1}</div>
-          <div style="font-size:11px;color:#aaa">Score</div>
-          <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace">${(loc.score*100).toFixed(1)}%</div>
-          <div style="font-size:10px;color:#aaa;margin-top:4px">${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}</div>
-        </div>
-      `);
-      marker.addTo(evLayer);
-    });
-
-    // Metrics
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const scores  = data.map(d => d.score);
-    document.getElementById('m-sites').textContent = data.length;
-    document.getElementById('m-score').textContent = (Math.max(...scores) * 100).toFixed(0) + '%';
-    document.getElementById('m-time').textContent  = elapsed;
-
-    // Fit map
-    const bounds = data.map(d => [d.latitude, d.longitude]);
-    map.fitBounds(bounds, { padding: [60, 60] });
-
-    log(`Analysis complete — ${data.length} sites found`, 'ok');
-    showToast(`✓ ${data.length} optimal sites identified`, 'success');
-
-    // Fetch workflow if we can
-    try {
-      const wfRes = await fetch('/workflow');
-      if (wfRes.ok) {
-        const wf = await wfRes.json();
-        if (wf.steps) {
-          renderWorkflow(wf.steps);
-          animateWorkflow(wf.steps, () => {
-            document.getElementById('m-steps').textContent = wf.steps.length;
-          });
+                list.appendChild(wrap);
+            });
         }
-      }
-    } catch (_) {
-      // Render a static workflow preview from generated_workflow.json shape
-      const staticSteps = [
-        {step_id:1, tool:'gdalwarp', outputs:{o:'warped_raster'}},
-        {step_id:2, tool:'DistanceRaster', outputs:{o:'distance_raster'}},
-        {step_id:3, tool:'NormalizeRaster', outputs:{o:'normalized_raster'}},
-        {step_id:4, tool:'WeightedOverlay', outputs:{o:'overlay_raster'}},
-        {step_id:5, tool:'NormalizeRaster', outputs:{o:'final_raster'}},
-        {step_id:6, tool:'ExtractTopLocations', outputs:{o:'suitable_locations'}},
-      ];
-      renderWorkflow(staticSteps);
-      animateWorkflow(staticSteps, () => {
-        document.getElementById('m-steps').textContent = staticSteps.length;
-      });
-    }
 
-  } catch (err) {
-    stopLoading();
-    log('Error: ' + err.message, 'err');
-    showToast('Analysis failed: ' + err.message, 'error');
-    console.error(err);
-  } finally {
-    btn.classList.remove('loading');
-  }
-}
+        function animateWorkflow(steps, cb) {
+            let i = 0;
+            function tick() {
+                if (i > 0) {
+                    const prev = document.getElementById('sn-' + (i - 1));
+                    if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+                    const conn = document.querySelector(`#ws-${i - 1} .step-connector`);
+                    if (conn) conn.classList.add('done');
+                }
+                if (i < steps.length) {
+                    const cur = document.getElementById('sn-' + i);
+                    if (cur) cur.classList.add('active');
+                    log(`Executing: ${steps[i].tool}`, 'info');
+                    i++;
+                    setTimeout(tick, 500 + Math.random() * 350);
+                } else { cb && cb(); }
+            }
+            tick();
+        }
 
-// ─── KEYBOARD ────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    e.preventDefault();
-    runAnalysis();
-  }
-});
-</script>
+        // ─── FALLBACK STATIC WORKFLOW ────────────────────────────
+        const STATIC_STEPS = [
+            { step_id: 1, tool: 'gdalwarp', outputs: { o: 'warped_raster' } },
+            { step_id: 2, tool: 'DistanceRaster', outputs: { o: 'distance_raster' } },
+            { step_id: 3, tool: 'NormalizeRaster', outputs: { o: 'normalized_raster' } },
+            { step_id: 4, tool: 'WeightedOverlay', outputs: { o: 'overlay_raster' } },
+            { step_id: 5, tool: 'NormalizeRaster', outputs: { o: 'final_normalized_raster' } },
+            { step_id: 6, tool: 'ExtractTopLocations', outputs: { o: 'suitable_locations' } },
+        ];
+
+        // ─── LOCATION RESOLUTION (3-tier priority) ───────────────
+        // Priority 1 → manual pins on map
+        // Priority 2 → location extracted from query (city/state/suburb/sector/direction)
+        // Priority 3 → topbar search bar
+
+        function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+        // ─── LOCATION EXTRACTOR ──────────────────────────────────
+        // Handles: cities, states, suburbs, sectors, directional regions
+
+        const FALSE_POSITIVE = /^(major|suitable|nearby|existing|good|optimal|high|low|urban|rural|road|highway|station|location|area|site|charging|electric|vehicle|india|across|the|a|an)\b/i;
+
+        function extractLocationFromQuery(text) {
+            // ── Pattern 1: Directional region qualifiers ────────────
+            // "north-west Pune", "south Mumbai", "eastern Delhi", "central Bangalore"
+            const dirMatch = text.match(
+                /\b(north(?:[-\s]?east|[-\s]?west)?|south(?:[-\s]?east|[-\s]?west)?|east(?:ern)?|west(?:ern)?|central|inner|outer|old|new)\s+([A-Z][a-zA-Z]{2,25})/i
+            );
+            if (dirMatch) {
+                const candidate = dirMatch[0].trim();
+                if (!FALSE_POSITIVE.test(dirMatch[2])) return candidate;
+            }
+
+            // ── Pattern 2: Sector notation ───────────────────────────
+            // "Sector 17 Chandigarh", "Sector 4, Gurgaon", "sector-18 Noida"
+            const sectorMatch = text.match(
+                /\bSector[-\s]?\d+[,\s]+([A-Z][a-zA-Z\s]{2,20}?)(?=\s+near|,|\.|$)/i
+            );
+            if (sectorMatch) return sectorMatch[0].trim();
+
+            // ── Pattern 3: Preposition + place (multi-word) ──────────
+            // "in Navi Mumbai", "near Whitefield", "for Tamil Nadu", "around Anna Nagar"
+            const prepMatch = text.match(
+                /\b(?:in|near|for|at|around|within|of|across|from|over)\s+([A-Z][a-zA-Z](?:[a-zA-Z\s]{1,35}?))(?=\s+near|\s+around|\s+EV|\s+India|\s+for|,|\.|$)/i
+            );
+            if (prepMatch) {
+                const loc = prepMatch[1].trim()
+                    // Strip trailing noise words
+                    .replace(/\s+(near|around|across|region|area|zone|part|side|district|division)\s*$/i, '');
+                if (loc.length >= 3 && !FALSE_POSITIVE.test(loc)) return loc;
+            }
+
+            // ── Pattern 4: "X region/zone/district/suburb" ───────────
+            // "Andheri region", "Bandra suburb", "Koramangala district"
+            const regionMatch = text.match(
+                /([A-Z][a-zA-Z\s]{2,25}?)\s+(?:region|zone|district|suburb|sector|ward|block|taluk|tehsil|mandal|nagar|locality)/i
+            );
+            if (regionMatch) {
+                const loc = regionMatch[1].trim();
+                if (!FALSE_POSITIVE.test(loc)) return loc;
+            }
+
+            // ── Pattern 5: Indian state names (exhaustive list) ──────
+            const STATES = [
+                'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+                'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+                'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+                'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+                'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+                'Delhi', 'Chandigarh', 'Puducherry', 'Ladakh', 'J&K', 'Jammu and Kashmir',
+                'Andaman', 'Lakshadweep', 'Dadra', 'Daman'
+            ];
+            for (const state of STATES) {
+                if (new RegExp(`\\b${state}\\b`, 'i').test(text)) return state;
+            }
+
+            // ── Pattern 6: Last-resort — any capitalized 1–3 word noun ─
+            const capMatch = text.match(
+                /\b([A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,}){0,2})\b(?=.*(?:EV|charging|station|location|suitable|suitab))/
+            );
+            if (capMatch) {
+                const loc = capMatch[1].trim();
+                if (!FALSE_POSITIVE.test(loc)) return loc;
+            }
+
+            return null;
+        }
+
+        async function quickGeocode(locationQuery) {
+            // Try the raw query first, then fallback to appending India
+            const attempts = [
+                locationQuery.includes('India') ? locationQuery : `${locationQuery}, India`,
+                locationQuery
+            ];
+            for (const q of attempts) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&addressdetails=1&countrycodes=in`;
+                    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+                    const data = await res.json();
+                    if (!data.length) continue;
+                    const item = data[0];
+                    const parts = item.display_name.split(',');
+                    // Best human label: suburb > city > town > village > county > state
+                    const cityName =
+                        item.address?.suburb ||
+                        item.address?.city ||
+                        item.address?.town ||
+                        item.address?.village ||
+                        item.address?.county ||
+                        item.address?.state ||
+                        parts[0].trim();
+                    // Zoom: state→7, district/county→10, city/town→12, suburb/neighbourhood→14
+                    const typeZoom = {
+                        state: 7, administrative: 9, county: 10,
+                        city: 12, town: 12, village: 13,
+                        suburb: 14, neighbourhood: 14, quarter: 14
+                    };
+                    const zoom = typeZoom[item.type] ?? typeZoom[item.class] ?? 12;
+                    return {
+                        display: parts.slice(0, 4).join(', ').trim(),
+                        cityName,
+                        lat: parseFloat(item.lat),
+                        lon: parseFloat(item.lon),
+                        zoom,
+                    };
+                } catch (_) { /* try next */ }
+            }
+            return null;
+        }
+
+        async function resolveLocation(queryText) {
+            // ── Priority 1: Manual pins ──────────────────────────
+            if (manualPins.length > 0) {
+                const avgLat = manualPins.reduce((s, p) => s + p.latlng.lat, 0) / manualPins.length;
+                const avgLon = manualPins.reduce((s, p) => s + p.latlng.lng, 0) / manualPins.length;
+                const geojson = {
+                    type: 'FeatureCollection',
+                    features: manualPins.map(p => ({
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [p.latlng.lng, p.latlng.lat] },
+                        properties: {}
+                    }))
+                };
+                log(`Using ${manualPins.length} manual pin(s) as analysis area`, 'ok');
+                // pan to centroid
+                map.flyTo([avgLat, avgLon], 13, { duration: 1.2 });
+                return { place_name: 'Custom Area (manual pins)', geojson };
+            }
+
+            // ── Priority 2: Extract location from query text ─────
+            const extractedLoc = extractLocationFromQuery(queryText);
+            if (extractedLoc) {
+                log(`Detected location: "${extractedLoc}" — geocoding…`, 'info');
+                const geo = await quickGeocode(extractedLoc);
+                if (geo) {
+                    document.getElementById('place-input').value = geo.display;
+                    // Keep query text but update the place name within it
+                    document.getElementById('query-input').value =
+                        queryText.replace(new RegExp(escapeRegex(extractedLoc), 'i'), geo.cityName);
+                    map.flyTo([geo.lat, geo.lon], geo.zoom, { duration: 1.4 });
+                    log(`Geocoded: ${geo.display} (zoom ${geo.zoom})`, 'ok');
+                    showToast(`📍 ${geo.cityName}`, 'success');
+                    return { place_name: geo.display, geojson: null };
+                }
+                // Geocode failed but we still have extracted text — use it as-is
+                log(`Geocode failed for "${extractedLoc}" — using as literal place name`, 'warn');
+                return { place_name: extractedLoc + ', India', geojson: null };
+            }
+
+            // ── Priority 3: Topbar search bar ───────────────────
+            const barVal = document.getElementById('place-input').value.trim();
+            if (barVal) {
+                log(`Using search bar location: ${barVal}`, 'info');
+                // Try to geocode it and pan the map
+                const geo = await quickGeocode(barVal);
+                if (geo) map.flyTo([geo.lat, geo.lon], geo.zoom, { duration: 1.2 });
+                return { place_name: barVal, geojson: null };
+            }
+
+            return null;  // caller will show error
+        }
+
+        // ─── MAIN ANALYSIS FLOW ───────────────────────────────────
+        let startTime;
+
+        async function runAnalysis() {
+            const btn = document.getElementById('run-btn');
+            const query = document.getElementById('query-input').value.trim();
+
+            if (!query) { showToast('⚠ Please enter a spatial query', 'error'); return; }
+
+            btn.classList.add('loading');
+            evLayer.clearLayers();
+            ['m-sites', 'm-score', 'm-steps', 'm-time'].forEach(id =>
+                document.getElementById(id).textContent = '—'
+            );
+
+            startTime = Date.now();
+            startLoading('Resolving Location…');
+            log('Resolving analysis location…', 'info');
+
+            let locationInfo;
+            try {
+                locationInfo = await resolveLocation(query);
+            } catch (e) {
+                locationInfo = null;
+            }
+
+            if (!locationInfo) {
+                stopLoading();
+                btn.classList.remove('loading');
+                showToast('⚠ Could not determine location. Type a city in the search bar or drop a pin.', 'error');
+                log('✗ No location found — specify a city in your query or the search bar', 'err');
+                return;
+            }
+
+            const { place_name: placeName, geojson } = locationInfo;
+            log(`Analysis area: ${placeName}`, 'info');
+            startLoading('Running GIS Analysis…');
+
+            try {
+                // ── STEP 1: Generate workflow ────────────────────
+                log('Generating workflow via LLM + RAG…', 'info');
+                let workflowSteps = STATIC_STEPS;
+                try {
+                    const wfRes = await fetch('/generate-workflow', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, location: placeName })
+                    });
+                    if (wfRes.ok) {
+                        const wfData = await wfRes.json();
+                        if (wfData.workflow?.steps) {
+                            workflowSteps = wfData.workflow.steps;
+                            log(`Workflow generated — ${workflowSteps.length} steps`, 'ok');
+                        }
+                    } else {
+                        log('Workflow generation skipped (using defaults)', 'warn');
+                    }
+                } catch (_) {
+                    log('Workflow generation failed — using defaults', 'warn');
+                }
+
+                renderWorkflow(workflowSteps);
+                animateWorkflow(workflowSteps, () =>
+                    document.getElementById('m-steps').textContent = workflowSteps.length
+                );
+
+                // ── STEP 2: Run GIS Engine ───────────────────────
+                log(`Submitting analysis for "${placeName}"…`, 'info');
+                const body = { place_name: placeName };
+                if (geojson) body.geojson = geojson;
+
+                const res = await fetch('/run-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Server ${res.status}: ${errText.slice(0, 120)}`);
+                }
+
+                const data = await res.json();
+                stopLoading();
+
+                if (!Array.isArray(data) || !data.length)
+                    throw new Error('No suitable locations returned. Check server logs.');
+
+                // ── STEP 3: Render results ───────────────────────
+                renderLocations(data);
+
+                data.forEach((loc, i) => {
+                    const marker = makeMarker(loc, i + 1);
+                    marker.bindPopup(`
+                        <div style="font-family:'Inter',sans-serif;min-width:160px">
+                          <div style="font-weight:700;font-size:13px;color:#00ff9d;margin-bottom:6px">Site #${i + 1}</div>
+                          <div style="font-size:10px;color:#aaa;letter-spacing:.08em;text-transform:uppercase">Suitability Score</div>
+                          <div style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#00ff9d">${(loc.score * 100).toFixed(1)}%</div>
+                          <div style="font-size:10px;color:#aaa;margin-top:6px">${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}</div>
+                          <div style="font-size:10px;color:#5a9fd4;margin-top:4px">${placeName}</div>
+                        </div>`);
+                    marker.addTo(evLayer);
+                });
+
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                const scores = data.map(d => d.score);
+                document.getElementById('m-sites').textContent = data.length;
+                document.getElementById('m-score').textContent = (Math.max(...scores) * 100).toFixed(0) + '%';
+                document.getElementById('m-time').textContent = elapsed + 's';
+
+                // Fit map to results
+                map.fitBounds(L.latLngBounds(data.map(d => [d.latitude, d.longitude])), { padding: [60, 60] });
+
+                log(`✓ Analysis complete — ${data.length} sites in ${placeName} (${elapsed}s)`, 'ok');
+                showToast(`✓ ${data.length} optimal sites found in ${placeName}`, 'success');
+
+            } catch (err) {
+                stopLoading();
+                log('✗ ' + err.message, 'err');
+                showToast('Analysis failed: ' + err.message, 'error');
+                console.error(err);
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+
+        // ─── KEYBOARD ────────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runAnalysis();
+            }
+            if (e.key === 'Escape' && currentTool === 'pin') {
+                setTool('select');
+                showToast('Pin mode deactivated', '');
+            }
+        });
+
+        // Init log
+        log('GeoSpatial AI engine initialised — India scope', 'info');
+        log('Type city in search bar, or use 📍 to pin a location', 'ok');
+    </script>
 </body>
+
 </html>
