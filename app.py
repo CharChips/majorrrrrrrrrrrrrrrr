@@ -38,8 +38,16 @@ def run_ev_analysis(place_name: str, geojson: dict = None):
             
         boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
     else:
-        boundary = ox.geocode_to_gdf(place_name)
-        boundary = boundary.to_crs(epsg=4326)
+        try:
+            boundary = ox.geocode_to_gdf(place_name)
+            boundary = boundary.to_crs(epsg=4326)
+        except TypeError:
+            import geopandas as gpd
+            from shapely.geometry import Point
+            lat, lng = ox.geocode(place_name)
+            # Create a ~5km box around the point
+            geom = Point(lng, lat).buffer(0.05).envelope
+            boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
         
     roi_geom = boundary.geometry.iloc[0]
     bounds = roi_geom.bounds
@@ -59,10 +67,7 @@ def run_ev_analysis(place_name: str, geojson: dict = None):
     )
 
     # Roads
-    if geojson and 'features' in geojson and len(geojson['features']) > 0:
-        G = ox.graph_from_polygon(roi_geom, network_type='drive')
-    else:
-        G = ox.graph_from_place(place_name, network_type='drive')
+    G = ox.graph_from_polygon(roi_geom, network_type='drive')
     roads = ox.graph_to_gdfs(G, nodes=False)
 
     with rasterio.open(slope_path) as src:
@@ -115,6 +120,7 @@ from rag_pipeline import run_pipeline
 
 class WorkflowRequest(BaseModel):
     query: str
+    location: str = ""
 
 class AnalysisRequest(BaseModel):
     place_name: str
@@ -122,7 +128,7 @@ class AnalysisRequest(BaseModel):
 
 @app.post("/generate-workflow")
 def generate_workflow(request: WorkflowRequest):
-    workflow = run_pipeline(request.query)
+    workflow = run_pipeline(request.query, request.location)
     with open("generated_workflow.json", "w") as f:
         json.dump(workflow, f, indent=4)
     return JSONResponse(content={"status": "success", "message": "Workflow generated.", "workflow": workflow})

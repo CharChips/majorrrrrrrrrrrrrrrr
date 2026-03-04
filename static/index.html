@@ -369,10 +369,11 @@
             loadingMsg.classList.add('loading');
 
             try {
+                const location = document.getElementById('location').value.trim();
                 const response = await fetch('/generate-workflow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
+                    body: JSON.stringify({ query: query, location: location })
                 });
 
                 const data = await response.json();
