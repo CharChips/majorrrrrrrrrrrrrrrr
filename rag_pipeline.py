@@ -101,7 +101,7 @@ def validate_json(output):
 # Main pipeline
 # ----------------------------------------
 
-def run_pipeline(user_query):
+def run_pipeline(user_query, location=""):
 
     index, metadata = build_index()
 
@@ -111,8 +111,9 @@ def run_pipeline(user_query):
     context = build_context(retrieved)
 
     # Strong constraints for LLM
-    system_instructions = """
-You are a GIS workflow planner.
+    system_instructions = f"""
+You are an expert GIS analyst and spatial data scientist planner.
+The user is currently focused on the geographic region: {location}.
 
 If workflow_type is site_suitability:
 - You MUST include WeightedOverlay.
@@ -128,19 +129,20 @@ Rules:
 - Output ONLY valid JSON.
 - Follow this schema:
 
-{
+{{
   "workflow_name": "",
   "workflow_type": "",
+  "reasoning": "Write a short paragraph explaining the spatial analysis strategy for this workflow. Act as an expert GIS consultant detailing why you selected these tools, how the criteria will interact, and why the resulting locations will be suitable for this specific location.",
   "steps": [
-    {
+    {{
       "step_id": 1,
       "tool": "",
-      "inputs": {},
-      "parameters": {},
-      "outputs": {}
-    }
+      "inputs": {{}},
+      "parameters": {{}},
+      "outputs": {{}}
+    }}
   ]
-}
+}}
 """
 
     llm_output = generate_workflow(user_query, context, system_instructions)

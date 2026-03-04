@@ -21,16 +21,34 @@ app = FastAPI()
 os.makedirs("data", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
-place_name = "Navi Mumbai, Maharashtra, India"
-
 # --------------------------------------------------
 # CORE EV ENGINE FUNCTION
 # --------------------------------------------------
 
-def run_ev_analysis():
+def run_ev_analysis(place_name: str, geojson: dict = None):
 
-    boundary = ox.geocode_to_gdf(place_name)
-    boundary = boundary.to_crs(epsg=4326)
+    if geojson and 'features' in geojson and len(geojson['features']) > 0:
+        import geopandas as gpd
+        from shapely.geometry import shape
+        geom = shape(geojson['features'][0]['geometry'])
+        
+        # Buffer points or lines into a valid AOI rectangle (approx 5km radius)
+        if geom.geom_type in ['Point', 'LineString']:
+            geom = geom.buffer(0.05).envelope
+            
+        boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+    else:
+        try:
+            boundary = ox.geocode_to_gdf(place_name)
+            boundary = boundary.to_crs(epsg=4326)
+        except TypeError:
+            import geopandas as gpd
+            from shapely.geometry import Point
+            lat, lng = ox.geocode(place_name)
+            # Create a ~5km box around the point
+            geom = Point(lng, lat).buffer(0.05).envelope
+            boundary = gpd.GeoDataFrame({'geometry': [geom]}, crs="EPSG:4326")
+        
     roi_geom = boundary.geometry.iloc[0]
     bounds = roi_geom.bounds
     roi = ee.Geometry.Rectangle(bounds)
@@ -49,7 +67,7 @@ def run_ev_analysis():
     )
 
     # Roads
-    G = ox.graph_from_place(place_name, network_type='drive')
+    G = ox.graph_from_polygon(roi_geom, network_type='drive')
     roads = ox.graph_to_gdfs(G, nodes=False)
 
     with rasterio.open(slope_path) as src:
@@ -96,9 +114,28 @@ def run_ev_analysis():
 # API ROUTES
 # --------------------------------------------------
 
-@app.get("/run-analysis")
-def analysis():
-    locations = run_ev_analysis()
+from pydantic import BaseModel
+import json
+from rag_pipeline import run_pipeline
+
+class WorkflowRequest(BaseModel):
+    query: str
+    location: str = ""
+
+class AnalysisRequest(BaseModel):
+    place_name: str
+    geojson: dict = None
+
+@app.post("/generate-workflow")
+def generate_workflow(request: WorkflowRequest):
+    workflow = run_pipeline(request.query, request.location)
+    with open("generated_workflow.json", "w") as f:
+        json.dump(workflow, f, indent=4)
+    return JSONResponse(content={"status": "success", "message": "Workflow generated.", "workflow": workflow})
+
+@app.post("/run-analysis")
+def analysis(request: AnalysisRequest):
+    locations = run_ev_analysis(request.place_name, request.geojson)
     return JSONResponse(content=locations)
 
 @app.get("/dem")
