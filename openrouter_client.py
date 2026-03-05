@@ -63,19 +63,24 @@ Return ONLY valid JSON.
 
 def generate_osm_tags(user_query):
     system_prompt = """
-You are an OpenStreetMap (OSM) tagging expert.
-Convert the user's natural language request into a valid JSON dictionary of OSM tags that can be passed to osmnx.geometries_from_polygon(tags=...).
+You are an OpenStreetMap (OSM) tagging expert. 
+Convert the user's natural language request into a valid JSON dictionary of OSM tags that can be passed to osmnx.features_from_polygon(tags=...).
 
 Rules:
 1. Return ONLY a single JSON dictionary. No markdown fences or explanations.
-2. Use standard OSM keys like "amenity", "building", "leisure", "landuse", "highway", "shop".
-3. Extract the primary intent of the user's query.
+2. Use standard OSM keys like "amenity", "building", "leisure", "landuse", "highway", "shop", "natural".
+3. **CRITICAL**: If the user wants to *build*, *make*, or *find a site for* something new (e.g. "make a new school"), DO NOT just return the tags for the final building (e.g. {"amenity": "school"}). 
+   Instead, return tags for suitable development land or zones:
+   - Use "landuse" (e.g., ["greenfield", "brownfield", "grass", "meadow", "farmland", "residential"]).
+   - Combine with relevant infrastructure if mentioned (e.g., {"highway": ["primary", "secondary"]} if they mention "near roads").
+4. If they are looking for *existing* places (e.g. "find hospitals"), use the direct tags.
 
 Examples:
 - "jogging path" -> {"highway": ["path", "track", "footway"], "leisure": "park"}
 - "national highway" -> {"highway": ["motorway", "trunk", "primary"]}
 - "best hospitals" -> {"amenity": ["hospital", "clinic"]}
-- "solar farms" -> {"power": "plant", "plant:source": "solar"}
+- "locations to build a new school near major roads" -> {"landuse": ["greenfield", "brownfield", "grass", "residential"], "highway": ["primary", "secondary", "trunk"]}
+- "suitable site for a mall" -> {"landuse": ["retail", "commercial", "industrial", "brownfield"]}
 """
 
     user_prompt = f"Convert this query to OSM tags: '{user_query}'"
@@ -152,3 +157,57 @@ Rules:
     except Exception as e:
         print("Reasoning Generation Error:", e)
         return "This location meets spatial criteria for your query."
+
+def generate_deep_analysis(query, spatial_data, web_context):
+    system_prompt = """
+You are a Senior Spatial Strategy Consultant. 
+The user is interested in a specific geographic site for a development project (e.g. building a mall).
+We have extracted spatial statistics (Population, Slope, Vegetation, Road Access) and recent web news about the area.
+
+Your task is to write a "Deep Site Analysis Report" in Markdown. 
+Include:
+1. **Site Suitability Summary**: How well it fits the query based on spatial data.
+2. **Environmental & Structural Insights**: Mention vegetation (is it barren or forested?) and slope.
+3. **Market & Logistics Context**: Mention road access and population density.
+4. **Recent Local Developments**: Incorporate relevant news from the provided web context.
+5. **Final Recommendation**: Should the user proceed with deeper due diligence?
+
+Rules:
+- Professional, detailed, but concise.
+- Use Markdown headers, bold text, and bullet points.
+- If web context is provided, cite it naturally.
+- Output ONLY the Markdown report.
+"""
+
+    user_prompt = f"""
+User Query: {query}
+Spatial Data for this point: {json.dumps(spatial_data)}
+Web Research Context: {web_context}
+"""
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.5,
+                "max_tokens": 800
+            },
+            timeout=40
+        )
+        data = response.json()
+        if "error" in data:
+            return f"API Error: {data['error']}"
+        if "choices" not in data:
+            return f"Unexpected response: {data}"
+        return data["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        return f"Error generating report: {str(e)}"

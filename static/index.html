@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GeoSpatial AI — EV Site Intelligence</title>
+    <title>GIS AI Expert</title>
 
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -33,7 +33,7 @@
             --accent-red: #ff4d6d;
             --text-primary: #ffffff;
             --text-secondary: #b3d4ff;
-            --text-dim: #6b8ca3;
+            --text-dim: #a0aec0;
             --font-ui: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
             --radius: 8px;
@@ -1090,6 +1090,367 @@
             color: var(--accent-cyan);
             border: 1px solid #00d4ff33;
         }
+
+        /* ─── TAB BAR ────────────────────────────────────────── */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 16px;
+            border: none;
+            background: none;
+            font-family: var(--font-ui);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-secondary);
+            background: #ffffff10;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0066cc, #00aaff);
+            color: #fff;
+            box-shadow: 0 0 12px #0088ff44;
+        }
+
+        .tab-btn .tab-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        /* ─── MAP CONTROLS OVERLAY ─────────────────────────────── */
+        .map-layers-control {
+            position: absolute;
+            top: 70px;
+            right: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+            min-width: 180px;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .map-layers-control.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+        }
+
+        .map-layers-control-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .layer-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .layer-checkbox input {
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .fetch-layers-btn {
+            background: linear-gradient(135deg, #0066cc, #00aaff);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 0 12px #0088ff44;
+            transition: all 0.2s;
+        }
+
+        .fetch-layers-btn:disabled {
+            background: #333;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ─── OVERLAY PANELS (left slide-in) ───────────────────── */
+        #map-wrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 360px;
+            bottom: 0;
+        }
+
+        #map {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ─── FLOATING MAP LAYERS ───────────────────────── */
+        #map-layers-panel {
+            display: flex;
+        }
+
+        /* ─── PERMANENT RIGHT PANEL (Sites) ─────────────────── */
+        #right-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 360px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            box-shadow: -4px 0 32px #000a;
+            display: flex;
+            flex-direction: column;
+            z-index: 400;
+            overflow: hidden;
+        }
+
+        #right-panel .view-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        /* Deep Analysis markdown rendering */
+        .md-report h1,
+        .md-report h2,
+        .md-report h3 {
+            color: var(--accent-cyan);
+            margin: 12px 0 6px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .md-report h1 {
+            font-size: 14px;
+        }
+
+        .md-report h2 {
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        .md-report h3 {
+            font-size: 12px;
+            color: var(--accent-green);
+        }
+
+        .md-report p {
+            margin: 6px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .md-report ul {
+            margin: 6px 0 6px 16px;
+        }
+
+        .md-report li {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 3px;
+        }
+
+        .md-report strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .md-report em {
+            color: var(--accent-amber);
+            font-style: italic;
+        }
+
+        .md-report hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 10px 0;
+        }
+
+        .view-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 400px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            box-shadow: 4px 0 32px #000a;
+            display: flex;
+            flex-direction: column;
+            z-index: 500;
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s;
+            transform: translateX(-420px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .view-panel.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .view-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .view-panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-panel-close {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .view-panel-close:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
+        }
+
+        .view-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .view-panel-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .view-panel-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* ─── NEWS CARDS ─────────────────────────────────────── */
+        .news-card {
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .news-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .news-tag {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            padding: 2px 7px;
+            margin-bottom: 6px;
+        }
+
+        .news-tag.news {
+            background: #3b82f615;
+            color: #60a5fa;
+            border: 1px solid #3b82f633;
+        }
+
+        .news-tag.social {
+            background: #8b5cf615;
+            color: #a78bfa;
+            border: 1px solid #8b5cf633;
+        }
+
+        .news-tag.market {
+            background: #f59e0b15;
+            color: #fbbf24;
+            border: 1px solid #f59e0b33;
+        }
+
+        .news-headline {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .news-snippet {
+            font-size: 11px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .news-meta {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .news-src {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
     </style>
 </head>
 
@@ -1099,17 +1460,20 @@
         <!-- ══ TOP BAR ══════════════════════════════════════════ -->
         <header id="topbar">
             <div class="brand">
-                <div class="brand-icon">
-                    <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <path
-                            d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                </div>
                 <div>
-                    <div class="brand-name">Geo<span>Spatial</span> AI</div>
-                    <div class="brand-tag">EV Site Intelligence Engine</div>
+                    <div class="brand-name">GIS<span>Site</span> Expert</div>
+                    <div class="brand-tag">AI-powered spatial assistant</div>
                 </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar" id="tab-bar">
+                <button class="tab-btn active" id="tab-chat" onclick="switchTab('chat')">
+                    <span class="tab-icon">💬</span> Chat
+                </button>
+                <button class="tab-btn" id="tab-map" onclick="switchTab('map')">
+                    <span class="tab-icon">🗺️</span> Map Only
+                </button>
             </div>
 
             <div class="topbar-center" id="topbar-center-wrap">
@@ -1132,168 +1496,52 @@
         </header>
 
         <!-- ══ MAIN ═════════════════════════════════════════════ -->
-        <div id="main">
+        <div id="main" style="position:relative; flex:1; overflow:hidden;">
 
-            <!-- ── LEFT SIDEBAR ── -->
-            <aside id="sidebar">
-
-                <!-- Query -->
-                <div class="panel-section">
-                    <div class="section-label">Spatial Query</div>
-                    <div class="query-area">
-                        <textarea id="query-input"
-                            placeholder="e.g. Find suitable EV charging locations near highways …">Find suitable EV charging station locations near major roads</textarea>
-                        <div class="query-footer" style="display:flex; flex-direction:column; gap:8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span class="query-hint">RAG + LLM powered</span>
-                                <button id="fetch-layers-btn" onclick="fetchMapLayers()"
-                                    style="background:var(--bg-base); border:1px solid var(--border); color:var(--text-secondary); padding:6px 10px; border-radius:var(--radius); font-size:11px; font-weight:600; cursor:pointer;">
-                                    Fetch Map Layers
-                                </button>
-                            </div>
-                            <button id="run-btn" onclick="generatePlan()">
-                                <span id="run-btn-icon">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
-                                        viewBox="0 0 24 24">
-                                        <polygon points="5 3 19 12 5 21 5 3" />
-                                    </svg>
-                                </span>
-                                <span>Generate Plan</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Criteria weights -->
-                <div class="panel-section">
-                    <div class="section-label">Suitability Criteria</div>
-
-                    <div class="criteria-card road">
-                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M3 3h5l3 18h2l3-18h5" />
-                            </svg></div>
-                        <div class="criteria-info">
-                            <div class="criteria-name">Road Proximity</div>
-                            <div class="criteria-desc">Distance to major roads</div>
-                        </div>
-                        <div class="criteria-weight">60%</div>
-                    </div>
-
-                    <div class="criteria-card slope">
-                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M3 20L21 4M21 4H9M21 4v12" />
-                            </svg></div>
-                        <div class="criteria-info">
-                            <div class="criteria-name">Terrain Slope</div>
-                            <div class="criteria-desc">DEM-based slope analysis</div>
-                        </div>
-                        <div class="criteria-weight">40%</div>
-                    </div>
-
-                    <div class="criteria-card pop" style="opacity:0.45;">
-                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg></div>
-                        <div class="criteria-info">
-                            <div class="criteria-name">Population Density</div>
-                            <div class="criteria-desc">Coming soon</div>
-                        </div>
-                        <div class="criteria-weight">—</div>
-                    </div>
-
-                    <div class="criteria-card grid" style="opacity:0.45;">
-                        <div class="criteria-icon"><svg width="16" height="16" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
-                                <rect x="2" y="7" width="20" height="14" rx="2" />
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                            </svg></div>
-                        <div class="criteria-info">
-                            <div class="criteria-name">Grid Infrastructure</div>
-                            <div class="criteria-desc">Coming soon</div>
-                        </div>
-                        <div class="criteria-weight">—</div>
-                    </div>
-                </div>
-
-                <!-- Weight sliders -->
-                <div class="panel-section">
-                    <div class="section-label">Weight Tuning</div>
-                    <div class="param-row">
-                        <div class="param-label">Road Proximity <span class="param-val" id="w-road-val">60%</span></div>
-                        <input type="range" id="w-road" min="0" max="100" value="60"
-                            oninput="syncWeights(this, 'w-road-val', 'w-slope', 'w-slope-val')" />
-                    </div>
-                    <div class="param-row">
-                        <div class="param-label">Terrain Slope <span class="param-val" id="w-slope-val">40%</span></div>
-                        <input type="range" id="w-slope" min="0" max="100" value="40"
-                            oninput="syncWeights(this, 'w-slope-val', 'w-road', 'w-road-val')" />
-                    </div>
-                    <div class="param-row">
-                        <div class="param-label">Top Locations <span class="param-val" id="n-loc-val">10</span></div>
-                        <input type="range" id="n-loc" min="1" max="20" value="10"
-                            oninput="document.getElementById('n-loc-val').textContent = this.value" />
-                    </div>
-                </div>
-
-                <!-- Layer control -->
-                <div class="panel-section">
-                    <div class="section-label">Map Layers</div>
-                    <div class="layer-chips">
-                        <div class="layer-chip active" id="lc-osm" onclick="toggleLayer('osm')">
-                            <div class="dot" style="background:#7da8cc"></div> Base OSM
-                        </div>
-                        <div class="layer-chip active" id="lc-ev" onclick="toggleLayer('ev')">
-                            <div class="dot" style="background:var(--accent-green)"></div> EV Sites
-                        </div>
-                        <div class="layer-chip" id="lc-heat" onclick="toggleLayer('heat')">
-                            <div class="dot" style="background:var(--accent-amber)"></div> Heat Map (Pop)
-                        </div>
-                        <div class="layer-chip" id="lc-dem" onclick="toggleLayer('dem')">
-                            <div class="dot" style="background:#ab7634"></div> Elevation
-                        </div>
-                        <div class="layer-chip" id="lc-veg" onclick="toggleLayer('veg')">
-                            <div class="dot" style="background:#66A000"></div> Vegetation
-                        </div>
-                        <div class="layer-chip" id="lc-roads" onclick="toggleLayer('roads')">
-                            <div class="dot" style="background:var(--accent-cyan)"></div> Roads
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Metrics -->
-                <div class="panel-section">
-                    <div class="section-label">Analysis Metrics</div>
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-val cyan" id="m-sites">—</div>
-                            <div class="metric-lbl">Sites Found</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-val green" id="m-score">—</div>
-                            <div class="metric-lbl">Top Score</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-val amber" id="m-steps">—</div>
-                            <div class="metric-lbl">Workflow Steps</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-val purple" id="m-time">—</div>
-                            <div class="metric-lbl">Exec Time (s)</div>
-                        </div>
-                    </div>
-                </div>
-
-            </aside>
-
-            <!-- ── MAP ── -->
+            <!-- ── MAP (always-on background) ── -->
             <div id="map-wrap">
                 <div id="map"></div>
+
+                <!-- FLOATING MAP LAYERS BUTTON -->
+                <div class="map-btn" id="btn-layers-toggle" title="Map Layers"
+                    style="position: absolute; top: 24px; right: 24px; z-index: 1000; width: 36px; height: 36px;"
+                    onclick="document.getElementById('map-layers-panel').classList.toggle('hidden')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+
+                <!-- FLOATING MAP LAYERS CONTROL PANEL -->
+                <div class="map-layers-control hidden" id="map-layers-panel">
+                    <div class="map-layers-control-title">
+                        Map Layers
+                        <button onclick="document.getElementById('map-layers-panel').classList.add('hidden')"
+                            style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;">&times;</button>
+                    </div>
+
+                    <button class="fetch-layers-btn" id="fetch-layers-btn" onclick="fetchMapLayers()">
+                        ☁️ Fetch EE Layers
+                    </button>
+
+                    <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+
+                    <label class="layer-checkbox">
+                        <input type="checkbox" id="layer-cb-heat" onchange="toggleLayer('heat')"> 👥 Population Density
+                    </label>
+                    <label class="layer-checkbox">
+                        <input type="checkbox" id="layer-cb-dem" onchange="toggleLayer('dem')"> ⛰️ Elevation (DEM)
+                    </label>
+                    <label class="layer-checkbox">
+                        <input type="checkbox" id="layer-cb-veg" onchange="toggleLayer('veg')"> 🌿 Vegetation (NDVI)
+                    </label>
+                    <label class="layer-checkbox">
+                        <input type="checkbox" id="layer-cb-lu" onchange="toggleLayer('lu')"> 🏗️ Land Use (ESA)
+                    </label>
+                    <label class="layer-checkbox"
+                        style="margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border);">
+                        <input type="checkbox" id="layer-cb-ev" checked onchange="toggleLayer('ev')"> ⚡ EV Analysis
+                    </label>
+                </div>
 
                 <!-- Floating toolbar -->
                 <div id="map-toolbar">
@@ -1303,7 +1551,7 @@
                             <path d="M5 3l14 9-7 1-3 7z" />
                         </svg>
                     </div>
-                    <div class="map-btn" id="btn-pin" title="Manual Pin (click map to add)" onclick="setTool('pin')">
+                    <div class="map-btn" id="btn-pin" title="Manual Pin" onclick="setTool('pin')">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -1339,7 +1587,7 @@
                             <path d="M10.48 3.14A6 6 0 0 1 15 9a6 6 0 0 1-6 6 6 6 0 0 1-5.14-2.88" />
                         </svg>
                     </div>
-                    <div class="map-btn" title="Clear manual pins" onclick="clearManualPins()" id="btn-clear-pins"
+                    <div class="map-btn" title="Clear pins" onclick="clearManualPins()" id="btn-clear-pins"
                         style="display:none">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
@@ -1367,14 +1615,14 @@
                         <span class="legend-text">Medium (0.65–0.85)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-dot" style="background:var(--accent-red);color:var(--accent-red)"></div>
-                        <span class="legend-text">Low (&lt; 0.65)</span>
+                        <div class="legend-dot" style="background:var(--accent-red);color:var(--accent-red)"></div><span
+                            class="legend-text">Low (< 0.65)</span>
                     </div>
                     <div class="score-bar"></div>
                     <div class="score-labels"><span>Low</span><span>High</span></div>
                 </div>
 
-                <!-- Loading -->
+                <!-- Loading overlay -->
                 <div id="loading-overlay">
                     <div class="spinner-ring"></div>
                     <div class="loading-text" id="loading-title">Running GIS Analysis…</div>
@@ -1421,37 +1669,99 @@
                 </div>
             </div>
 
-            <!-- ── RIGHT PANEL ── -->
-            <aside id="right-panel">
-                <div class="panel-section">
-                    <div class="section-label">Top Locations</div>
-                    <div id="locations-list">
-                        <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:24px 0;">
-                            Run analysis to see results
-                        </div>
-                    </div>
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--    PANEL 1: CHAT                                  -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <div class="view-panel active" id="panel-chat">
+                <div class="view-panel-header">
+                    <div class="view-panel-title">💬 GIS Expert Chat</div>
+                    <button class="view-panel-close" onclick="switchTab('map')" title="Close panel">✕</button>
                 </div>
 
-                <div class="panel-section" style="padding: 16px 16px 8px;">
-                    <div class="section-label">Workflow Steps</div>
-                    <div id="workflow-list">
-                        <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:16px 0;">
-                            No workflow generated yet
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section-label" style="padding: 0 16px; margin-top: 8px;">Analysis Log</div>
-                <div style="padding:0 16px 8px">
+                <!-- Chat History -->
+                <div class="view-panel-body" style="display:flex; flex-direction:column; gap:12px; padding:16px;"
+                    id="chat-history">
                     <div
-                        style="font-size:10px;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.06em;text-transform:uppercase">
-                        Manual Pins</div>
-                    <div id="manual-pins-list">
-                        <div style="color:var(--text-dim);font-size:11px;text-align:center;padding:10px 0;">Enable 📍
-                            pin tool then click map</div>
+                        style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); line-height:1.5;">
+                        <span style="color:var(--accent-cyan); font-weight:bold; display:block; margin-bottom:4px;">⚙️
+                            GIS Expert</span>
+                        Hello! I am your AI GIS Expert. Tell me what kind of site you are looking to build (e.g. "Find
+                        the best place to build a new mall in Navi Mumbai").
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div
+                    style="border-top:1px solid var(--border); padding:12px; flex-shrink:0; background:var(--bg-panel);">
+                    <div class="query-area">
+                        <textarea id="query-input" placeholder="Message the GIS Expert..."
+                            style="min-height:50px; font-size:13px; resize:none;"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();generatePlan();}"></textarea>
+                        <div class="query-footer"
+                            style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                            <span class="query-hint">AI-powered spatial analysis</span>
+                            <button id="run-btn" onclick="generatePlan()"
+                                style="padding:8px 16px;"><span>Send</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:none">
+                    <input type="range" id="w-road" min="0" max="100" value="60" />
+                    <input type="range" id="w-slope" min="0" max="100" value="40" />
+                    <input type="range" id="n-loc" min="1" max="20" value="10" />
+                    <div class="metric-val cyan" id="m-sites"></div>
+                    <div class="metric-val green" id="m-score"></div>
+                    <div class="metric-val amber" id="m-steps"></div>
+                    <div class="metric-val purple" id="m-time"></div>
+                    <div class="layer-chip active" id="lc-osm"></div>
+                    <div class="layer-chip active" id="lc-ev"></div>
+                    <div class="layer-chip" id="lc-heat"></div>
+                    <div class="layer-chip" id="lc-dem"></div>
+                    <div class="layer-chip" id="lc-veg"></div>
+                    <div class="layer-chip" id="lc-roads"></div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--    PERMANENT RIGHT PANEL: TOP SITES                -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <aside id="right-panel">
+                <div class="view-panel-header" style="flex-shrink:0;">
+                    <div class="view-panel-title">📍 Top Locations & Deep Analysis</div>
+                </div>
+
+                <div class="view-panel-body">
+                    <!-- Top Locations list -->
+                    <div class="panel-section">
+                        <div class="section-label">Top Locations</div>
+                        <div id="locations-list">
+                            <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:24px 0;">Run
+                                analysis to see results</div>
+                        </div>
+                    </div>
+
+                    <!-- Deep Analysis Report area -->
+                    <div class="panel-section" id="deep-analysis-section" style="display:none;">
+                        <div class="section-label">🔍 Deep Analysis Report</div>
+                        <div id="deep-analysis-content" class="md-report" style="padding-top:4px;"></div>
+                    </div>
+
+                    <!-- Workflow Steps -->
+                    <div class="panel-section" style="padding: 16px 16px 8px;">
+                        <div class="section-label">Workflow Steps</div>
+                        <div id="workflow-list">
+                            <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:16px 0;">No
+                                workflow generated yet</div>
+                        </div>
                     </div>
                 </div>
             </aside>
+
+
+
+            <!-- Manual pins list invisible holder -->
+            <div id="manual-pins-list" style="display:none;"></div>
 
         </div><!-- /main -->
     </div><!-- /app -->
@@ -1838,11 +2148,28 @@
       <div class="location-rank">#${i + 1}</div>
       <div class="location-score" style="font-size:12px;font-weight:bold;color:#00ff9d;">${name}</div>
       <div class="location-coords" style="margin-top:4px;font-size:10px;">${reason}</div>
-      <div class="score-fill" style="width:100%;background:linear-gradient(90deg,#00d4ff,#00ff9d88)"></div>
+      <div class="score-fill" style="width:100%;margin-bottom:8px;background:linear-gradient(90deg,#00d4ff,#00ff9d88)"></div>
+      <button onclick="event.stopPropagation(); runDeepAnalysis(${i}, ${feature.properties.centroid[0]}, ${feature.properties.centroid[1]}, '${name.replace(/'/g, "\\'")}')" 
+              style="width:100%; padding:6px; background:var(--bg-base); border:1px solid var(--accent-cyan); color:var(--accent-cyan); border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold; transition:all 0.2s;">
+          🔍 Deep Analysis
+      </button>
     `;
-                card.onclick = () => {
+                card.onclick = (e) => {
+                    // Don't trigger if clicking the Deep Analysis button
+                    if (e.target.tagName === 'BUTTON') return;
+
                     document.querySelectorAll('.location-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
+
+                    // Fly to this location on the map
+                    const centroid = feature.properties.centroid;
+                    if (centroid && centroid[0] && centroid[1]) {
+                        map.flyTo([centroid[0], centroid[1]], 16, { animate: true, duration: 1.2 });
+                        // Switch to Map Only view so user can see the location
+                        switchTab('map');
+                        // Show a brief toast with the name
+                        showToast(`📍 Showing ${name} on map`, '');
+                    }
                 };
                 list.appendChild(card);
             });
@@ -2080,7 +2407,7 @@
                 return;
             }
 
-            btn.textContent = 'Fetching...';
+            btn.innerHTML = '⏳ Fetching...';
             btn.disabled = true;
 
             startLoading('Resolving location for layers...');
@@ -2091,7 +2418,7 @@
 
             if (!locInfo) {
                 stopLoading();
-                btn.textContent = 'Fetch Map Layers';
+                btn.innerHTML = '☁️ Fetch EE Layers';
                 btn.disabled = false;
                 showToast('⚠ Could not determine location.', 'error');
                 return;
@@ -2101,14 +2428,23 @@
             startLoading('Downloading Map Layers...');
             log(`Fetching background layers for ${place_name}...`, 'info');
 
+            // Identify selected layers
+            const selectedLayers = [];
+            if (document.getElementById('layer-cb-heat').checked) selectedLayers.push('population');
+            if (document.getElementById('layer-cb-dem').checked) selectedLayers.push('dem');
+            if (document.getElementById('layer-cb-veg').checked) selectedLayers.push('vegetation');
+            if (document.getElementById('layer-cb-lu').checked) selectedLayers.push('land_use');
+
             const body = {
                 query: query,
-                place_name: place_name
+                place_name: place_name,
+                weights: { layers: selectedLayers.length > 0 ? selectedLayers : ['population', 'dem', 'vegetation', 'land_use'] }
             };
             if (geojson) body.geojson = geojson;
 
-            // Clear old cached layers for a new area
-            ['heat', 'dem', 'veg', 'roads'].forEach(k => {
+            // Clear old cached layers for a NEW area if one is provided
+            // For now, we simple-clear to refresh tiles
+            ['heat', 'dem', 'veg', 'lu'].forEach(k => {
                 if (mapLayers[k]) {
                     if (map.hasLayer(mapLayers[k])) map.removeLayer(mapLayers[k]);
                     mapLayers[k] = null;
@@ -2118,13 +2454,15 @@
             await loadLayers(body);
 
             stopLoading();
-            btn.textContent = '✓ Ready';
+            btn.innerHTML = '✓ Ready';
             setTimeout(() => {
-                btn.textContent = 'Fetch Map Layers';
+                btn.innerHTML = '☁️ Fetch EE Layers';
                 btn.disabled = false;
             }, 3000);
             showToast('Map layers are ready to view!', 'success');
         }
+
+
 
         // ─── MAIN ANALYSIS FLOW (Split into Generate & Execute) ───────────────────────────────────
         let startTime;
@@ -2147,6 +2485,17 @@
             currentQuery = query;
 
             if (!query) { showToast('⚠ Please enter a spatial query', 'error'); return; }
+
+            // Append user query to chat history
+            const ch = document.getElementById('chat-history');
+            if (ch) {
+                ch.innerHTML += `<div style="background:#00d4ff15; border:1px solid #00d4ff44; border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-left:16px;">
+                    <span style="color:var(--text-secondary); font-weight:bold; display:block; margin-bottom:4px;">👤 You</span>
+                    ${query}
+                </div>`;
+                ch.scrollTop = ch.scrollHeight;
+                document.getElementById('query-input').value = ''; // clear input
+            }
 
             btn.classList.add('loading');
             evLayer.clearLayers();
@@ -2375,12 +2724,158 @@
                 log(`✓ Analysis complete — ${features.length} results in ${placeName} (${elapsed}s)`, 'ok');
                 showToast(`✓ ${features.length} results found in ${placeName}`, 'success');
 
+                if (ch) {
+                    ch.innerHTML += `<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-right:16px;">
+                        <span style="color:var(--accent-green); font-weight:bold; display:block; margin-bottom:4px;">⚙️ GIS Expert</span>
+                        Analysis complete in ${elapsed}s! Found the top ${features.length} suitable locations.
+                        <a href="#" onclick="switchTab('sites'); return false;" style="color:var(--accent-cyan); text-decoration:none; font-weight:bold;">👉 View Sites →</a>
+                    </div>`;
+                    ch.scrollTop = ch.scrollHeight;
+                }
+
+                // Auto-switch to Sites panel to show the results
+                switchTab('sites');
+
             } catch (err) {
                 stopLoading();
                 log('✗ ' + err.message, 'err');
                 showToast('Analysis failed: ' + err.message, 'error');
+
+                if (ch) {
+                    ch.innerHTML += `<div style="background:#ff4d6d15; border:1px solid #ff4d6d44; border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-right:16px;">
+                        <span style="color:var(--accent-red); font-weight:bold; display:block; margin-bottom:4px;">⚙️ GIS Expert</span>
+                        I'm sorry, an error occurred during analysis: ${err.message}
+                    </div>`;
+                    ch.scrollTop = ch.scrollHeight;
+                }
+
                 console.error(err);
             }
+        }
+
+        // ─── DEEP ANALYSIS LOGIC ──────────────────────────────────────
+        async function runDeepAnalysis(index, lat, lon, locName) {
+            const ch = document.getElementById('chat-history');
+
+            // Add user request to chat
+            if (ch) {
+                ch.innerHTML += `<div style="background:#00d4ff15; border:1px solid #00d4ff44; border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-left:16px;">
+                    <span style="color:var(--text-secondary); font-weight:bold; display:block; margin-bottom:4px;">👤 You</span>
+                    Can you perform a deep analysis on location #${index + 1} (${locName})?
+                </div>`;
+                ch.scrollTop = ch.scrollHeight;
+            }
+
+            startLoading('Running Deep Site Analysis (LLM + Earth Engine)…');
+
+            try {
+                const res = await fetch('/deep-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lat: lat,
+                        lon: lon,
+                        query: currentQuery || "Deep analysis",
+                        location_name: locName
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server returned ${res.status}`);
+                }
+
+                const data = await res.json();
+                stopLoading();
+
+                if (data.status === 'success') {
+                    const renderedHtml = markdownToHtml(data.report);
+
+                    // Show in chat (compact)
+                    if (ch) {
+                        ch.innerHTML += `<div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-right:16px;">
+                            <span style="color:var(--accent-cyan); font-weight:bold; display:block; margin-bottom:4px;">⚙️ GIS Expert — Deep Analysis</span>
+                            <div class="md-report">${renderedHtml}</div>
+                        </div>`;
+                        ch.scrollTop = ch.scrollHeight;
+                    }
+
+                    // Show in permanent right panel (beautiful formatted)
+                    const daSection = document.getElementById('deep-analysis-section');
+                    const daContent = document.getElementById('deep-analysis-content');
+                    if (daSection && daContent) {
+                        daContent.innerHTML = `<div style="padding:8px 0"><strong style="color:var(--accent-cyan); font-size:11px;">${locName}</strong>${renderedHtml}</div>`;
+                        daSection.style.display = 'block';
+                    }
+
+                    showToast(`✓ Deep Analysis complete for ${locName}`, 'success');
+                } else {
+                    throw new Error("Invalid response format");
+                }
+
+            } catch (err) {
+                stopLoading();
+                if (ch) {
+                    ch.innerHTML += `<div style="background:#ff4d6d15; border:1px solid #ff4d6d44; border-radius:var(--radius); padding:12px; font-size:13px; color:var(--text-primary); margin-right:16px;">
+                        <span style="color:var(--accent-red); font-weight:bold; display:block; margin-bottom:4px;">⚙️ GIS Expert Error</span>
+                        Sorry, I failed to retrieve the deep analysis report: ${err.message}
+                    </div>`;
+                    ch.scrollTop = ch.scrollHeight;
+                }
+                showToast('Deep Analysis failed', 'error');
+            }
+        }
+
+        // ─── MARKDOWN TO HTML PARSER ─────────────────────────────────
+        function markdownToHtml(md) {
+            // Escape raw HTML
+            let s = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Headers
+            s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            s = s.replace(/^---+$/gm, '<hr/>');
+
+            // Bullet lists
+            s = s.replace(/((?:^[*\-] .+\n?)+)/gm, (match) => {
+                const items = match.trim().split('\n')
+                    .map(l => `<li>${l.replace(/^[*\-] /, '')}</li>`).join('');
+                return `<ul>${items}</ul>`;
+            });
+
+            // Inline bold/italic
+            s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+            // Wrap remaining text lines in paragraphs
+            s = s.split('\n').map(line => {
+                const t = line.trim();
+                if (!t) return '';
+                if (/^<(h[1-3]|ul|li|hr)/.test(t)) return t;
+                return `<p>${t}</p>`;
+            }).join('');
+
+            return s;
+        }
+
+
+
+        // ─── TAB SWITCHING ───────────────────────────────────────
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('tab-' + tab);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Show/hide panels
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            if (tab !== 'map') {
+                const activePanel = document.getElementById('panel-' + tab);
+                if (activePanel) activePanel.classList.add('active');
+            }
+
+            // Invalidate map on reveal (needed if panel was hiding map)
+            setTimeout(() => map.invalidateSize(), 60);
         }
 
         // ─── KEYBOARD ────────────────────────────────────────────
@@ -2401,30 +2896,33 @@
         let roadsLayer = null;
 
         function toggleLayer(layerId) {
-            const chip = document.getElementById('lc-' + layerId);
-            if (activeLayers.has(layerId)) {
+            const cb = document.getElementById('layer-cb-' + layerId);
+            if (!cb) return;
+
+            if (cb.checked) {
+                activeLayers.add(layerId);
+                if (mapLayers[layerId]) mapLayers[layerId].addTo(map);
+            } else {
                 activeLayers.delete(layerId);
-                chip.classList.remove('active');
                 if (mapLayers[layerId] && map.hasLayer(mapLayers[layerId])) {
                     map.removeLayer(mapLayers[layerId]);
-                }
-            } else {
-                activeLayers.add(layerId);
-                chip.classList.add('active');
-                if (mapLayers[layerId]) {
-                    mapLayers[layerId].addTo(map);
                 }
             }
         }
 
         async function loadLayers(requestBody) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
             try {
                 log('Requesting extra map layers from Earth Engine...', 'info');
                 const res = await fetch('/get-layers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!res.ok) {
                     log('Failed to fetch layers — maybe EE project is unauthorized?', 'warn');
@@ -2432,37 +2930,50 @@
                 }
                 const data = await res.json();
 
+                // Open layers panel to show results
+                document.getElementById('map-layers-panel').classList.remove('hidden');
+
                 // Heatmap (Population)
                 if (data.population && !mapLayers['heat']) {
                     mapLayers['heat'] = L.tileLayer(data.population, { opacity: 0.6 });
-                    if (activeLayers.has('heat')) mapLayers['heat'].addTo(map);
+                    document.getElementById('layer-cb-heat').checked = true;
+                    activeLayers.add('heat');
+                    mapLayers['heat'].addTo(map);
                 }
 
                 // DEM
                 if (data.dem && !mapLayers['dem']) {
                     mapLayers['dem'] = L.tileLayer(data.dem, { opacity: 0.5 });
-                    if (activeLayers.has('dem')) mapLayers['dem'].addTo(map);
+                    document.getElementById('layer-cb-dem').checked = true;
+                    activeLayers.add('dem');
+                    mapLayers['dem'].addTo(map);
                 }
 
                 // Vegetation (NDVI)
                 if (data.vegetation && !mapLayers['veg']) {
                     mapLayers['veg'] = L.tileLayer(data.vegetation, { opacity: 0.5 });
-                    if (activeLayers.has('veg')) mapLayers['veg'].addTo(map);
+                    document.getElementById('layer-cb-veg').checked = true;
+                    activeLayers.add('veg');
+                    mapLayers['veg'].addTo(map);
                 }
 
-                // Roads (OSMnx GeoJSON)
-                if (data.roads && !mapLayers['roads']) {
-                    if (roadsLayer) map.removeLayer(roadsLayer);
-                    roadsLayer = L.geoJSON(data.roads, {
-                        style: { color: 'var(--accent-cyan)', weight: 1, opacity: 0.5 }
-                    });
-                    mapLayers['roads'] = roadsLayer;
-                    if (activeLayers.has('roads')) roadsLayer.addTo(map);
+                // Land Use
+                if (data.land_use && !mapLayers['lu']) {
+                    mapLayers['lu'] = L.tileLayer(data.land_use, { opacity: 0.6 });
+                    document.getElementById('layer-cb-lu').checked = true;
+                    activeLayers.add('lu');
+                    mapLayers['lu'].addTo(map);
                 }
 
                 log('Extra map layers loaded successfully.', 'ok');
             } catch (err) {
-                console.error("Layer load error:", err);
+                if (err.name === 'AbortError') {
+                    log('Layer request timed out (45s) — Earth Engine might be slow.', 'warn');
+                    showToast('⚠ Layer loading timed out. Try again or check selection.', 'error');
+                } else {
+                    console.error("Layer load error:", err);
+                    log('Failed to load layers: ' + err.message, 'err');
+                }
             }
         }
 

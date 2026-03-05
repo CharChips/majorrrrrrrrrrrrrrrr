@@ -1,0 +1,106 @@
+2026-03-06 02:30:09,134 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-03-06 02:30:09,212 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-03-06 02:30:28,366 - server - INFO - Initializing Earth Engine with project: llm-gis-project
+2026-03-06 02:30:34,260 - server - INFO - EE Initialize successful
+2026-03-06 02:31:00,679 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-03-06 02:31:00,720 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-03-06 02:31:24,842 - server - INFO - Initializing Earth Engine with project: llm-gis-project
+2026-03-06 02:31:31,525 - server - INFO - EE Initialize successful
+2026-03-06 02:31:31,660 - server - INFO - Received request for /get-layers: Navi Mumbai, India
+2026-03-06 02:31:31,660 - server - INFO - Geocoding location: Navi Mumbai, India
+2026-03-06 02:31:31,706 - server - INFO - Geocoding to GDF successful
+2026-03-06 02:31:31,708 - server - INFO - Place slug: navi_mumbai__india
+2026-03-06 02:31:31,708 - server - INFO - Requested layers: ['population']
+2026-03-06 02:31:31,708 - server - INFO - Fetching Population layer MapID
+2026-03-06 02:31:33,130 - server - INFO - Population MapID success
+2026-03-06 02:31:35,191 - server - INFO - Received request for /get-layers: Navi Mumbai, India
+2026-03-06 02:31:35,191 - server - INFO - Geocoding location: Navi Mumbai, India
+2026-03-06 02:31:35,197 - server - INFO - Geocoding to GDF successful
+2026-03-06 02:31:35,197 - server - INFO - Place slug: navi_mumbai__india
+2026-03-06 02:31:35,197 - server - INFO - Requested layers: ['dem', 'land_use']
+2026-03-06 02:31:35,197 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:31:36,682 - server - INFO - DEM MapID success
+2026-03-06 02:31:39,194 - server - INFO - Received request for /get-layers: Mumbai
+2026-03-06 02:31:39,195 - server - INFO - Geocoding location: Mumbai
+2026-03-06 02:31:39,197 - server - WARNING - Geocoding to GDF failed, trying fallback: Nominatim did not geocode query 'Mumbai' to a geometry of type (Multi)Polygon.
+2026-03-06 02:31:39,203 - server - INFO - Fallback geocoding successful
+2026-03-06 02:31:39,205 - server - INFO - Place slug: mumbai
+2026-03-06 02:31:39,205 - server - INFO - Requested layers: ['population', 'dem']
+2026-03-06 02:31:39,205 - server - INFO - Fetching Population layer MapID
+2026-03-06 02:31:40,710 - server - INFO - Population MapID success
+2026-03-06 02:31:40,711 - server - INFO - Adding background task: Export Population to data/mumbai_population.tif
+2026-03-06 02:31:40,711 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:31:42,221 - server - INFO - DEM MapID success
+2026-03-06 02:31:42,221 - server - INFO - Adding background task: Export DEM to data/mumbai_dem.tif
+2026-03-06 02:31:42,222 - server - INFO - Adding background task: Export Slope to data/mumbai_slope.tif
+2026-03-06 02:31:59,253 - server - INFO - Received request for /get-layers: Mumbai
+2026-03-06 02:31:59,253 - server - INFO - Geocoding location: Mumbai
+2026-03-06 02:31:59,255 - server - WARNING - Geocoding to GDF failed, trying fallback: Nominatim did not geocode query 'Mumbai' to a geometry of type (Multi)Polygon.
+2026-03-06 02:31:59,263 - server - INFO - Fallback geocoding successful
+2026-03-06 02:31:59,263 - server - INFO - Place slug: mumbai
+2026-03-06 02:31:59,263 - server - INFO - Requested layers: ['population', 'dem']
+2026-03-06 02:31:59,263 - server - INFO - Fetching Population layer MapID
+2026-03-06 02:32:00,712 - server - INFO - Population MapID success
+2026-03-06 02:32:00,713 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:32:01,180 - server - INFO - DEM MapID success
+2026-03-06 02:32:03,227 - server - INFO - Received request for /get-layers: Pune
+2026-03-06 02:32:03,227 - server - INFO - Geocoding location: Pune
+2026-03-06 02:32:03,254 - server - INFO - Geocoding to GDF successful
+2026-03-06 02:32:03,255 - server - INFO - Place slug: pune
+2026-03-06 02:32:03,256 - server - INFO - Requested layers: ['dem']
+2026-03-06 02:32:03,256 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:32:03,730 - server - INFO - DEM MapID success
+2026-03-06 02:32:03,730 - server - INFO - Adding background task: Export DEM to data/pune_dem.tif
+2026-03-06 02:32:03,730 - server - INFO - Adding background task: Export Slope to data/pune_slope.tif
+2026-03-06 02:32:05,786 - server - INFO - Received request for /get-layers: Pune, Pune City, Pune District, Maharashtra
+2026-03-06 02:32:05,786 - server - INFO - Geocoding location: Pune, Pune City, Pune District, Maharashtra
+2026-03-06 02:32:05,788 - server - WARNING - Geocoding to GDF failed, trying fallback: Nominatim did not geocode query 'Pune, Pune City, Pune District, Maharashtra' to a geometry of type (Multi)Polygon.
+2026-03-06 02:32:05,798 - server - INFO - Fallback geocoding successful
+2026-03-06 02:32:05,799 - server - INFO - Place slug: pune__pune_city__pune_district__maharashtra
+2026-03-06 02:32:05,799 - server - INFO - Requested layers: ['dem']
+2026-03-06 02:32:05,799 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:32:08,484 - server - INFO - DEM MapID success
+2026-03-06 02:33:00,375 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-03-06 02:33:00,445 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-03-06 02:33:19,671 - server - INFO - Initializing Earth Engine with project: llm-gis-project
+2026-03-06 02:33:24,722 - server - INFO - EE Initialize successful
+2026-03-06 02:37:07,101 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2026-03-06 02:37:07,101 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: sentence-transformers/paraphrase-MiniLM-L3-v2
+2026-03-06 02:37:08,314 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:08,314 - huggingface_hub.utils._http - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-06 02:37:08,341 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/modules.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:08,581 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:08,617 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:08,841 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:08,875 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:09,122 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:09,151 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/README.md "HTTP/1.1 200 OK"
+2026-03-06 02:37:09,398 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:09,435 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/modules.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:09,687 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:09,723 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/sentence_bert_config.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:09,970 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+2026-03-06 02:37:10,187 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:10,217 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/config.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:10,658 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:10,680 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/config.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:10,927 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:10,962 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:11,192 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-MiniLM-L3-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-03-06 02:37:11,429 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-MiniLM-L3-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-03-06 02:37:11,743 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-06 02:37:11,786 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-MiniLM-L3-v2/4ca70771034acceecb2e72475f72050fcdde4ddc/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+2026-03-06 02:37:12,012 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-MiniLM-L3-v2 "HTTP/1.1 200 OK"
+2026-03-06 02:37:45,064 - server - INFO - Received request for /get-layers: Pune,  Pune City,  Pune District,  Maharashtra
+2026-03-06 02:37:45,064 - server - INFO - Geocoding location: Pune,  Pune City,  Pune District,  Maharashtra
+2026-03-06 02:37:45,068 - server - WARNING - Geocoding to GDF failed, trying fallback: Nominatim did not geocode query 'Pune,  Pune City,  Pune District,  Maharashtra' to a geometry of type (Multi)Polygon.
+2026-03-06 02:37:45,082 - server - INFO - Fallback geocoding successful
+2026-03-06 02:37:45,083 - server - INFO - Place slug: pune___pune_city___pune_district___maharashtra
+2026-03-06 02:37:45,084 - server - INFO - Requested layers: ['population', 'dem', 'vegetation', 'land_use']
+2026-03-06 02:37:45,084 - server - INFO - Fetching Population layer MapID
+2026-03-06 02:37:47,797 - server - INFO - Population MapID success
+2026-03-06 02:37:47,797 - server - INFO - Adding background task: Export Population to data/pune___pune_city___pune_district___maharashtra_population.tif
+2026-03-06 02:37:47,797 - server - INFO - Fetching DEM layer MapID
+2026-03-06 02:37:49,242 - server - INFO - DEM MapID success
+2026-03-06 02:37:49,242 - server - INFO - Adding background task: Export DEM to data/pune___pune_city___pune_district___maharashtra_dem.tif
+2026-03-06 02:37:49,243 - server - INFO - Adding background task: Export Slope to data/pune___pune_city___pune_district___maharashtra_slope.tif

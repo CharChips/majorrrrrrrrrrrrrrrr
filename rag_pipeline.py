@@ -131,6 +131,8 @@ We have the following strict datasets available for analysis:
 
 If workflow_type is site_suitability:
 - You MUST select the most logical datasets from the 5 available options above based on the specific end-goal.
+- IMPORTANT: Site suitability is about finding OPTIMAL NEW BUILD SITES, not just identifying existing ones.
+- For commercial/mall requests: prioritize "population_raster" (near consumers), "road_network" (easy access), and "vegetation_raster" (specifically look for LOW vegetation/barren land to minimize environmental impact).
 - You MUST include WeightedOverlay for those criteria.
 - You MUST normalize all criteria before combining.
 - ExtractTopLocations must be final step.

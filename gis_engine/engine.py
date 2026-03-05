@@ -38,12 +38,14 @@ class GISEngine:
         from .raster.slope import SlopeStep
         from .raster.dem import ReadRasterStep
         from .vector.osm_loader import ReadVectorStep
+        from .analysis.extraction import ExtractTopLocationsStep
 
         self.registry.register("threshold", ThresholdStep)
         self.registry.register("reclassify", ReclassifyStep)
         self.registry.register("calculate_slope", SlopeStep)
         self.registry.register("read_raster", ReadRasterStep)
         self.registry.register("read_vector", ReadVectorStep)
+        self.registry.register("ExtractTopLocations", ExtractTopLocationsStep)
 
     def run_workflow(self, workflow_json):
         """
@@ -51,7 +53,9 @@ class GISEngine:
         """
         self.executor.steps = []
 
-        for step in workflow_json:
+        steps = workflow_json.get("steps", workflow_json) if isinstance(workflow_json, dict) else workflow_json
+
+        for step in steps:
             self.executor.add_step(step)
 
         return self.executor.execute(self.context)

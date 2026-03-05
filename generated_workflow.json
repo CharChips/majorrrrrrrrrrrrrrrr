@@ -1,7 +1,7 @@
 {
-    "workflow_name": "EV_Charging_Station_Suitability_Pune",
+    "workflow_name": "EV_Charging_Station_Site_Suitability_Pune",
     "workflow_type": "site_suitability",
-    "reasoning": "To locate EV charging stations in Pune we need sites that are close to major roads for accessibility, have high population density to ensure demand, and lie within commercially zoned areas where such infrastructure is permitted. Therefore we use the road_network raster to compute distance to the nearest road, the population_raster to capture demand, and the land_use_raster to isolate commercial zones. Each raster is normalized to a 0\u20111 scale (with distance inverted so that nearer pixels score higher) and then combined with a WeightedOverlay (weights: distance 0.4, population 0.4, land use 0.2). The resulting suitability surface is finally processed with ExtractTopLocations to return the top candidate points.",
+    "reasoning": "To locate optimal new EV charging stations in Pune we prioritize proximity to major roads (road_network) to ensure easy access, high local demand (population_raster) to capture potential users, and low vegetation cover (vegetation_raster) to minimize site preparation and environmental impact. Each raster is normalized to a 0\u20111 scale, with the distance raster inverted so that closer distances receive higher scores. A weighted overlay combines the three criteria (road proximity 0.5, population density 0.3, low vegetation 0.2) to produce a suitability surface. The highest\u2011scoring pixels are then extracted as candidate site coordinates.",
     "steps": [
         {
             "step_id": 1,
@@ -10,7 +10,7 @@
                 "vector_layer": "road_network"
             },
             "parameters": {
-                "output_name": "distance_to_road"
+                "output_resolution": "30m"
             },
             "outputs": {
                 "raster": "distance_to_road"
@@ -23,11 +23,10 @@
                 "raster": "distance_to_road"
             },
             "parameters": {
-                "invert": true,
-                "output_name": "distance_norm"
+                "method": "min_max"
             },
             "outputs": {
-                "raster": "distance_norm"
+                "raster": "norm_distance"
             }
         },
         {
@@ -37,26 +36,23 @@
                 "raster": "population_raster"
             },
             "parameters": {
-                "output_name": "population_norm"
+                "method": "min_max"
             },
             "outputs": {
-                "raster": "population_norm"
+                "raster": "norm_population"
             }
         },
         {
             "step_id": 4,
             "tool": "NormalizeRaster",
             "inputs": {
-                "raster": "land_use_raster"
+                "raster": "vegetation_raster"
             },
             "parameters": {
-                "reclassify_to_binary": {
-                    "target_class": "commercial"
-                },
-                "output_name": "landuse_norm"
+                "method": "min_max"
             },
             "outputs": {
-                "raster": "landuse_norm"
+                "raster": "norm_vegetation"
             }
         },
         {
@@ -65,21 +61,24 @@
             "inputs": {
                 "rasters": [
                     {
-                        "raster": "distance_norm",
-                        "weight": 0.4
+                        "raster": "norm_distance",
+                        "weight": 0.5,
+                        "invert": true
                     },
                     {
-                        "raster": "population_norm",
-                        "weight": 0.4
+                        "raster": "norm_population",
+                        "weight": 0.3,
+                        "invert": false
                     },
                     {
-                        "raster": "landuse_norm",
-                        "weight": 0.2
+                        "raster": "norm_vegetation",
+                        "weight": 0.2,
+                        "invert": true
                     }
                 ]
             },
             "parameters": {
-                "output_name": "suitability_score"
+                "method": "sum"
             },
             "outputs": {
                 "raster": "suitability_score"
@@ -93,10 +92,10 @@
             },
             "parameters": {
                 "top_n": 10,
-                "output_name": "ev_charging_candidates"
+                "output_format": "geojson"
             },
             "outputs": {
-                "vector": "ev_charging_candidates"
+                "locations": "top_ev_charging_sites"
             }
         }
     ]
