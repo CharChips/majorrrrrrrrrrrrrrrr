@@ -27,7 +27,7 @@ Return ONLY valid JSON.
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama-3.1-8b-instant",
+                "model": "groq/compound-mini",
                 "messages": [
                     {
                         "role": "system",

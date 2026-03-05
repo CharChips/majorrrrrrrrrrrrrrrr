@@ -1,1 +1,1 @@
-{"error": {"message": "Rate limit reached for model `llama-3.1-8b-instant` in organization `org_01kj4hwvn5e8ztw9pw0pzq734t` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Used 5734, Requested 626. Please try again in 3.599999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing", "type": "tokens", "code": "rate_limit_exceeded"}}
+{"error": {"message": "Invalid API Key", "type": "invalid_request_error", "code": "invalid_api_key"}}

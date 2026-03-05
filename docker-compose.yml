@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: .
+    volumes:
+      - .:/app
+      - data_volume:/app/data
+      # Mount GEE credentials if they exist locally
+      - ${HOME}/.config/earthengine:/root/.config/earthengine
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    command: streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    depends_on:
+      - backend
+
+volumes:
+  data_volume:

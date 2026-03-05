@@ -31,9 +31,9 @@
             --accent-green: #00ff9d;
             --accent-amber: #ffb830;
             --accent-red: #ff4d6d;
-            --text-primary: #e0f0ff;
-            --text-secondary: #7da8cc;
-            --text-dim: #3a6080;
+            --text-primary: #ffffff;
+            --text-secondary: #b3d4ff;
+            --text-dim: #6b8ca3;
             --font-ui: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
             --radius: 8px;
@@ -1143,16 +1143,22 @@
                     <div class="query-area">
                         <textarea id="query-input"
                             placeholder="e.g. Find suitable EV charging locations near highways …">Find suitable EV charging station locations near major roads</textarea>
-                        <div class="query-footer">
-                            <span class="query-hint">RAG + LLM powered</span>
-                            <button id="run-btn" onclick="runAnalysis()">
+                        <div class="query-footer" style="display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="query-hint">RAG + LLM powered</span>
+                                <button id="fetch-layers-btn" onclick="fetchMapLayers()"
+                                    style="background:var(--bg-base); border:1px solid var(--border); color:var(--text-secondary); padding:6px 10px; border-radius:var(--radius); font-size:11px; font-weight:600; cursor:pointer;">
+                                    Fetch Map Layers
+                                </button>
+                            </div>
+                            <button id="run-btn" onclick="generatePlan()">
                                 <span id="run-btn-icon">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
                                         viewBox="0 0 24 24">
                                         <polygon points="5 3 19 12 5 21 5 3" />
                                     </svg>
                                 </span>
-                                <span>Run Analysis</span>
+                                <span>Generate Plan</span>
                             </button>
                         </div>
                     </div>
@@ -1373,6 +1379,45 @@
                     <div class="spinner-ring"></div>
                     <div class="loading-text" id="loading-title">Running GIS Analysis…</div>
                     <div class="loading-sub" id="loading-sub">Initialising RAG pipeline</div>
+                </div>
+
+                <!-- Plan Review Modal -->
+                <div id="plan-review-modal"
+                    style="display:none; position:absolute; inset:0; background:#050d1ae6; z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+                    <div
+                        style="background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-lg); width:600px; max-width:90%; box-shadow:0 12px 48px #000a; display:flex; flex-direction:column;">
+                        <div
+                            style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="font-size:14px; font-weight:600; color:var(--text-primary); margin:0;">🗺️
+                                Workflow Plan Review</h3>
+                            <button onclick="closePlanReview()"
+                                style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:18px;">&times;</button>
+                        </div>
+                        <div style="padding:20px; flex:1; overflow-y:auto; max-height:400px;">
+                            <h4 style="font-size:12px; font-weight:600; color:var(--accent-cyan); margin:0 0 8px;">
+                                Analysis Reasoning</h4>
+                            <div id="plan-reasoning"
+                                style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px; background:var(--bg-card); padding:12px; border-radius:var(--radius); border:1px solid var(--border);">
+                            </div>
+                            <h4 style="font-size:12px; font-weight:600; color:var(--accent-green); margin:0 0 8px;">
+                                Proposed Steps</h4>
+                            <div id="modal-workflow-list" style="margin-left: 8px;"></div>
+                        </div>
+                        <div
+                            style="padding:16px 20px; border-top:1px solid var(--border); background:var(--bg-card); border-bottom-left-radius:var(--radius-lg); border-bottom-right-radius:var(--radius-lg);">
+                            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                                <input type="text" id="plan-feedback-input"
+                                    placeholder="Want to tweak something? E.g., 'also consider population density'"
+                                    style="flex:1; background:var(--bg-base); border:1px solid var(--border); border-radius:var(--radius); padding:8px 12px; color:var(--text-primary); font-size:13px; outline:none;"
+                                    onkeydown="if(event.key==='Enter') window.modifyPlan()" />
+                                <button onclick="window.modifyPlan()"
+                                    style="background:linear-gradient(135deg, #1f2937, #374151); border:1px solid var(--border); color:white; padding:8px 16px; border-radius:var(--radius); cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
+                            </div>
+                            <button id="approve-plan-btn" onclick="executePlan()"
+                                style="width:100%; background:linear-gradient(135deg, #00ff9d, #00cc7d); border:none; color:#050d1a; padding:10px; border-radius:var(--radius); cursor:pointer; font-size:14px; font-weight:700; box-shadow:0 0 14px #00ff9d44;">Approve
+                                & Execute Analysis</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2026,12 +2071,80 @@
             return null;  // caller will show error
         }
 
-        // ─── MAIN ANALYSIS FLOW ───────────────────────────────────
-        let startTime;
+        async function fetchMapLayers() {
+            const btn = document.getElementById('fetch-layers-btn');
+            const query = document.getElementById('query-input').value.trim();
 
-        async function runAnalysis() {
+            if (!query && !document.getElementById('place-input').value.trim() && manualPins.length === 0) {
+                showToast('⚠ Please specify a location first', 'error');
+                return;
+            }
+
+            btn.textContent = 'Fetching...';
+            btn.disabled = true;
+
+            startLoading('Resolving location for layers...');
+            let locInfo = null;
+            try {
+                locInfo = await resolveLocation(query || "Current location");
+            } catch (e) { }
+
+            if (!locInfo) {
+                stopLoading();
+                btn.textContent = 'Fetch Map Layers';
+                btn.disabled = false;
+                showToast('⚠ Could not determine location.', 'error');
+                return;
+            }
+
+            const { place_name, geojson } = locInfo;
+            startLoading('Downloading Map Layers...');
+            log(`Fetching background layers for ${place_name}...`, 'info');
+
+            const body = {
+                query: query,
+                place_name: place_name
+            };
+            if (geojson) body.geojson = geojson;
+
+            // Clear old cached layers for a new area
+            ['heat', 'dem', 'veg', 'roads'].forEach(k => {
+                if (mapLayers[k]) {
+                    if (map.hasLayer(mapLayers[k])) map.removeLayer(mapLayers[k]);
+                    mapLayers[k] = null;
+                }
+            });
+
+            await loadLayers(body);
+
+            stopLoading();
+            btn.textContent = '✓ Ready';
+            setTimeout(() => {
+                btn.textContent = 'Fetch Map Layers';
+                btn.disabled = false;
+            }, 3000);
+            showToast('Map layers are ready to view!', 'success');
+        }
+
+        // ─── MAIN ANALYSIS FLOW (Split into Generate & Execute) ───────────────────────────────────
+        let startTime;
+        let pendingLocationInfo = null;
+        let currentWorkflowSteps = null; // Store full workflow JSON for feedback
+        let currentQuery = "";
+        let currentWorkflowData = null;
+
+        function openPlanReview() {
+            document.getElementById('plan-review-modal').style.display = 'flex';
+        }
+
+        function closePlanReview() {
+            document.getElementById('plan-review-modal').style.display = 'none';
+        }
+
+        async function generatePlan() {
             const btn = document.getElementById('run-btn');
             const query = document.getElementById('query-input').value.trim();
+            currentQuery = query;
 
             if (!query) { showToast('⚠ Please enter a spatial query', 'error'); return; }
 
@@ -2041,80 +2154,178 @@
                 document.getElementById(id).textContent = '—'
             );
 
-            startTime = Date.now();
             startLoading('Resolving Location…');
-            log('Resolving analysis location…', 'info');
+            log('Resolving analysis location for plan generation…', 'info');
 
-            let locationInfo;
             try {
-                locationInfo = await resolveLocation(query);
+                pendingLocationInfo = await resolveLocation(query);
             } catch (e) {
-                locationInfo = null;
+                pendingLocationInfo = null;
             }
 
-            if (!locationInfo) {
+            if (!pendingLocationInfo) {
                 stopLoading();
                 btn.classList.remove('loading');
-                showToast('⚠ Could not determine location. Type a city in the search bar or drop a pin.', 'error');
-                log('✗ No location found — specify a city in your query or the search bar', 'err');
+                showToast('⚠ Could not determine location.', 'error');
+                log('✗ No location found', 'err');
                 return;
             }
 
-            const { place_name: placeName, geojson } = locationInfo;
-            log(`Analysis area: ${placeName}`, 'info');
-            startLoading('Running GIS Analysis…');
+            const { place_name: placeName } = pendingLocationInfo;
+            log(`Area resolved: ${placeName}`, 'info');
+
+            // Generate workflow
+            startLoading('Generating Workflow Plan…');
+            log('Generating workflow via LLM + RAG…', 'info');
+            currentWorkflowSteps = STATIC_STEPS;
+            currentWorkflowData = null;
+            let reasoning = "Standard analysis strategy applied.";
 
             try {
-                // ── STEP 1: Generate workflow ────────────────────
-                log('Generating workflow via LLM + RAG…', 'info');
-                let workflowSteps = STATIC_STEPS;
-                try {
-                    const wfRes = await fetch('/generate-workflow', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query, location: placeName })
-                    });
-                    if (wfRes.ok) {
-                        const wfData = await wfRes.json();
-                        if (wfData.workflow?.steps) {
-                            workflowSteps = wfData.workflow.steps;
-                            log(`Workflow generated — ${workflowSteps.length} steps`, 'ok');
-                        }
-                    } else {
-                        log('Workflow generation skipped (using defaults)', 'warn');
+                const wfRes = await fetch('/generate-workflow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, location: placeName })
+                });
+                if (wfRes.ok) {
+                    const wfData = await wfRes.json();
+                    if (wfData.workflow?.steps) {
+                        currentWorkflowData = wfData.workflow;
+                        currentWorkflowSteps = wfData.workflow.steps;
+                        reasoning = wfData.workflow.reasoning || "Spatial analysis plan generated successfully.";
+                        log(`Workflow generated — ${currentWorkflowSteps.length} steps`, 'ok');
                     }
-                } catch (_) {
-                    log('Workflow generation failed — using defaults', 'warn');
+                } else {
+                    log('Workflow generation failed (using defaults)', 'warn');
                 }
+            } catch (e) {
+                log('Workflow generation API error — using defaults', 'warn');
+            }
 
-                renderWorkflow(workflowSteps);
-                animateWorkflow(workflowSteps, () =>
-                    document.getElementById('m-steps').textContent = workflowSteps.length
-                );
+            stopLoading();
+            btn.classList.remove('loading');
 
-                // ── STEP 2: Run GIS Engine ───────────────────────
-                log(`Submitting analysis for "${placeName}"…`, 'info');
+            // Populate Modal
+            document.getElementById('plan-reasoning').innerHTML = reasoning;
+            const modalList = document.getElementById('modal-workflow-list');
+            modalList.innerHTML = '';
+            currentWorkflowSteps.forEach((step, i) => {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = "display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;";
+                const isLast = i === currentWorkflowSteps.length - 1;
+                wrap.innerHTML = `
+                    ${!isLast ? '<div style="position:absolute; left:11px; top:24px; bottom:-12px; width:2px; background:var(--border);"></div>' : ''}
+                    <div style="width:24px; height:24px; border-radius:50%; background:var(--bg-base); border:2px solid var(--accent-cyan); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; color:var(--accent-cyan); z-index:2;">${step.step_id}</div>
+                    <div style="flex:1; background:var(--bg-base); border:1px solid var(--border); padding:8px 12px; border-radius:var(--radius); box-shadow:0 2px 8px #0004;">
+                        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--text-primary);">${step.tool}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Outputs: ${Object.values(step.outputs || {}).join(', ')}</div>
+                    </div>
+                `;
+                modalList.appendChild(wrap);
+            });
 
-                const wRoad = parseInt(document.getElementById('w-road').value, 10);
-                const wSlope = parseInt(document.getElementById('w-slope').value, 10);
-                const nLoc = parseInt(document.getElementById('n-loc').value, 10);
+            document.getElementById('plan-feedback-input').value = '';
+            openPlanReview();
+        }
 
-                const body = {
-                    query: query,
-                    place_name: placeName,
-                    top_n: nLoc,
-                    weights: {
-                        road_dist: wRoad / 100.0,
-                        slope: wSlope / 100.0
+        window.modifyPlan = async function () {
+            const feedbackInput = document.getElementById('plan-feedback-input');
+            const feedback = feedbackInput.value.trim();
+            if (!feedback || !currentWorkflowData || !pendingLocationInfo) return;
+
+            feedbackInput.value = '';
+            document.getElementById('approve-plan-btn').textContent = "Regenerating...";
+            document.getElementById('approve-plan-btn').disabled = true;
+            log(`Modifying plan with feedback: "${feedback}"`, 'info');
+
+            try {
+                const wfRes = await fetch('/generate-workflow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: currentQuery,
+                        location: pendingLocationInfo.place_name,
+                        previous_workflow: currentWorkflowData,
+                        feedback: feedback
+                    })
+                });
+
+                if (wfRes.ok) {
+                    const wfData = await wfRes.json();
+                    if (wfData.workflow?.steps) {
+                        currentWorkflowData = wfData.workflow;
+                        currentWorkflowSteps = wfData.workflow.steps;
+                        const reasoning = wfData.workflow.reasoning || "Revised spatial analysis plan.";
+                        log(`Plan revised — ${currentWorkflowSteps.length} steps`, 'ok');
+
+                        // Re-render modal
+                        document.getElementById('plan-reasoning').innerHTML = reasoning;
+                        const modalList = document.getElementById('modal-workflow-list');
+                        modalList.innerHTML = '';
+                        currentWorkflowSteps.forEach((step, i) => {
+                            const wrap = document.createElement('div');
+                            wrap.style.cssText = "display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;";
+                            const isLast = i === currentWorkflowSteps.length - 1;
+                            wrap.innerHTML = `
+                                ${!isLast ? '<div style="position:absolute; left:11px; top:24px; bottom:-12px; width:2px; background:var(--border);"></div>' : ''}
+                                <div style="width:24px; height:24px; border-radius:50%; background:var(--bg-base); border:2px solid #a78bfa; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; color:#a78bfa; z-index:2;">${step.step_id}</div>
+                                <div style="flex:1; background:var(--bg-base); border:1px solid #a78bfa55; padding:8px 12px; border-radius:var(--radius); box-shadow:0 2px 8px #0004;">
+                                    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--text-primary);">${step.tool}</div>
+                                    <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Outputs: ${Object.values(step.outputs || {}).join(', ')}</div>
+                                </div>
+                            `;
+                            modalList.appendChild(wrap);
+                        });
+                        showToast('Plan regenerated successfully', 'success');
                     }
-                };
-                if (geojson) body.geojson = geojson;
-
-                // Fire off layer loader in background if any GEE layers are requested
-                if (activeLayers.has('heat') || activeLayers.has('dem') || activeLayers.has('veg') || activeLayers.has('roads')) {
-                    loadLayers(body);
                 }
+            } catch (e) {
+                log('Failed to regenerate plan', 'err');
+                showToast('Failed to regenerate plan', 'error');
+            } finally {
+                document.getElementById('approve-plan-btn').textContent = "Approve & Execute Analysis";
+                document.getElementById('approve-plan-btn').disabled = false;
+            }
+        };
 
+        async function executePlan() {
+            closePlanReview();
+            if (!pendingLocationInfo || !currentWorkflowSteps) return;
+
+            startTime = Date.now();
+            const { place_name: placeName, geojson } = pendingLocationInfo;
+
+            // ── STEP 1: Render approved workflow in sidebar ───────
+            renderWorkflow(currentWorkflowSteps);
+            animateWorkflow(currentWorkflowSteps, () =>
+                document.getElementById('m-steps').textContent = currentWorkflowSteps.length
+            );
+
+            // ── STEP 2: Run GIS Engine ───────────────────────
+            log(`Submitting analysis for "${placeName}"…`, 'info');
+            startLoading('Executing Analysis Pipeline…');
+
+            const wRoad = parseInt(document.getElementById('w-road').value, 10);
+            const wSlope = parseInt(document.getElementById('w-slope').value, 10);
+            const nLoc = parseInt(document.getElementById('n-loc').value, 10);
+
+            const body = {
+                query: currentQuery,
+                place_name: placeName,
+                top_n: nLoc,
+                weights: {
+                    road_dist: wRoad / 100.0,
+                    slope: wSlope / 100.0
+                }
+            };
+            if (geojson) body.geojson = geojson;
+
+            // Fire off layer loader
+            if (activeLayers.has('heat') || activeLayers.has('dem') || activeLayers.has('veg') || activeLayers.has('roads')) {
+                loadLayers(body);
+            }
+
+            try {
                 const res = await fetch('/run-analysis', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2169,8 +2380,6 @@
                 log('✗ ' + err.message, 'err');
                 showToast('Analysis failed: ' + err.message, 'error');
                 console.error(err);
-            } finally {
-                btn.classList.remove('loading');
             }
         }
 
@@ -2178,7 +2387,7 @@
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
-                runAnalysis();
+                generatePlan();
             }
             if (e.key === 'Escape' && currentTool === 'pin') {
                 setTool('select');

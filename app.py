@@ -122,6 +122,8 @@ from rag_pipeline import run_pipeline
 class WorkflowRequest(BaseModel):
     query: str
     location: str = ""
+    previous_workflow: dict = None
+    feedback: str = None
 
 class AnalysisRequest(BaseModel):
     query: str = ""
@@ -131,8 +133,13 @@ class AnalysisRequest(BaseModel):
     weights: dict = None
 
 @app.post("/generate-workflow")
-def generate_workflow(request: WorkflowRequest):
-    workflow = run_pipeline(request.query, request.location)
+def generate_workflow_api(request: WorkflowRequest):
+    workflow = run_pipeline(
+        user_query=request.query, 
+        location=request.location,
+        previous_workflow=request.previous_workflow,
+        feedback=request.feedback
+    )
     with open("generated_workflow.json", "w") as f:
         json.dump(workflow, f, indent=4)
     return JSONResponse(content={"status": "success", "message": "Workflow generated.", "workflow": workflow})

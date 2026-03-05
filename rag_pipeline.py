@@ -108,7 +108,7 @@ def validate_json(output):
 # Main pipeline
 # ----------------------------------------
 
-def run_pipeline(user_query, location=""):
+def run_pipeline(user_query, location="", previous_workflow=None, feedback=None):
 
     index, metadata = build_index()
 
@@ -160,7 +160,12 @@ Rules:
 }
 """.replace("{LOCATION}", location)
 
-    llm_output = generate_workflow(user_query, context, system_instructions)
+    if previous_workflow and feedback:
+        user_query_override = f"Original Query: {user_query}\n\nPrevious Plan:\n{json.dumps(previous_workflow)}\n\nUser Feedback for Modification:\n{feedback}\n\nPlease generate a completely revised workflow JSON that addresses the user feedback."
+    else:
+        user_query_override = user_query
+
+    llm_output = generate_workflow(user_query_override, context, system_instructions)
 
     workflow = validate_json(llm_output)
     

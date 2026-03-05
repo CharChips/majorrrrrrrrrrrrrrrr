@@ -1,131 +1,102 @@
 {
-    "workflow_name": "Best Location to Jog in Mumbai",
+    "workflow_name": "EV_Charging_Station_Suitability_Pune",
     "workflow_type": "site_suitability",
-    "reasoning": "To find the best location to jog in Mumbai, we will use a raster-based approach. We will select the 'vegetation_raster' to avoid forests and find green spaces/parks, and the 'road_network' to ensure proximity to driving roads. We will then use WeightedOverlay to combine these criteria, normalize the values, and extract the top locations.",
+    "reasoning": "To locate EV charging stations in Pune we need sites that are close to major roads for accessibility, have high population density to ensure demand, and lie within commercially zoned areas where such infrastructure is permitted. Therefore we use the road_network raster to compute distance to the nearest road, the population_raster to capture demand, and the land_use_raster to isolate commercial zones. Each raster is normalized to a 0\u20111 scale (with distance inverted so that nearer pixels score higher) and then combined with a WeightedOverlay (weights: distance 0.4, population 0.4, land use 0.2). The resulting suitability surface is finally processed with ExtractTopLocations to return the top candidate points.",
     "steps": [
         {
             "step_id": 1,
-            "tool": "gdalwarp",
+            "tool": "DistanceRaster",
             "inputs": {
-                "input_raster": "vegetation_raster"
+                "vector_layer": "road_network"
             },
             "parameters": {
-                "output_crs": "EPSG:4326"
+                "output_name": "distance_to_road"
             },
             "outputs": {
-                "output_raster": "vegetation_raster_warped"
+                "raster": "distance_to_road"
             }
         },
         {
             "step_id": 2,
-            "tool": "gdalwarp",
+            "tool": "NormalizeRaster",
             "inputs": {
-                "input_raster": "road_network"
+                "raster": "distance_to_road"
             },
             "parameters": {
-                "output_crs": "EPSG:4326"
+                "invert": true,
+                "output_name": "distance_norm"
             },
             "outputs": {
-                "output_raster": "road_network_warped"
+                "raster": "distance_norm"
             }
         },
         {
             "step_id": 3,
             "tool": "NormalizeRaster",
             "inputs": {
-                "input_raster": "vegetation_raster_warped"
+                "raster": "population_raster"
             },
-            "parameters": {},
+            "parameters": {
+                "output_name": "population_norm"
+            },
             "outputs": {
-                "output_raster": "vegetation_raster_normalized"
+                "raster": "population_norm"
             }
         },
         {
             "step_id": 4,
             "tool": "NormalizeRaster",
             "inputs": {
-                "input_raster": "road_network_warped"
+                "raster": "land_use_raster"
             },
-            "parameters": {},
+            "parameters": {
+                "reclassify_to_binary": {
+                    "target_class": "commercial"
+                },
+                "output_name": "landuse_norm"
+            },
             "outputs": {
-                "output_raster": "road_network_normalized"
+                "raster": "landuse_norm"
             }
         },
         {
             "step_id": 5,
             "tool": "WeightedOverlay",
             "inputs": {
-                "raster1": "vegetation_raster_normalized",
-                "raster2": "road_network_normalized"
+                "rasters": [
+                    {
+                        "raster": "distance_norm",
+                        "weight": 0.4
+                    },
+                    {
+                        "raster": "population_norm",
+                        "weight": 0.4
+                    },
+                    {
+                        "raster": "landuse_norm",
+                        "weight": 0.2
+                    }
+                ]
             },
             "parameters": {
-                "weights": "0.7, 0.3"
+                "output_name": "suitability_score"
             },
             "outputs": {
-                "output_raster": "suitability_raster"
+                "raster": "suitability_score"
             }
         },
         {
             "step_id": 6,
-            "tool": "gdalwarp",
-            "inputs": {
-                "input_raster": "suitability_raster"
-            },
-            "parameters": {
-                "output_crs": "EPSG:4326"
-            },
-            "outputs": {
-                "output_raster": "suitability_raster_warped"
-            }
-        },
-        {
-            "step_id": 7,
-            "tool": "NormalizeRaster",
-            "inputs": {
-                "input_raster": "suitability_raster_warped"
-            },
-            "parameters": {},
-            "outputs": {
-                "output_raster": "suitability_raster_normalized"
-            }
-        },
-        {
-            "step_id": 8,
             "tool": "ExtractTopLocations",
             "inputs": {
-                "input_raster": "suitability_raster_normalized"
+                "suitability_raster": "suitability_score"
             },
             "parameters": {
-                "N": "10"
+                "top_n": 10,
+                "output_name": "ev_charging_candidates"
             },
             "outputs": {
-                "output_locations": "top_locations"
-            }
-        },
-        {
-            "step_id": 9,
-            "tool": "gdalwarp",
-            "inputs": {
-                "input_raster": "top_locations"
-            },
-            "parameters": {
-                "output_crs": "EPSG:4326"
-            },
-            "outputs": {
-                "output_raster": "top_locations_warped"
-            }
-        },
-        {
-            "step_id": 10,
-            "tool": "ExtractTopLocations",
-            "inputs": {
-                "input_raster": "top_locations_warped"
-            },
-            "parameters": {
-                "N": "10"
-            },
-            "outputs": {
-                "output_locations": "final_locations"
+                "vector": "ev_charging_candidates"
             }
         }
     ]
