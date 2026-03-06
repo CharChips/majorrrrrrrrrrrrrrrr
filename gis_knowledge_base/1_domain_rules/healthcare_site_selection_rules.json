@@ -1,0 +1,11 @@
+{
+    "concept": "Healthcare Site Selection",
+    "workflow_type": "site_suitability",
+    "rules": [
+        "Target areas with high population density to ensure maximum patient reach.",
+        "Ensuring close proximity to major road networks for emergency vehicle access.",
+        "Avoid areas with high slopes to ensure accessibility for all individuals.",
+        "Selection should consider distance from existing hospitals to avoid service overlap.",
+        "Prefer land use zones classified as commercial or residential over industrial or forest."
+    ]
+}

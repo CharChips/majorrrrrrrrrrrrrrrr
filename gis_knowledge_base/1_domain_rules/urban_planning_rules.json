@@ -1,0 +1,11 @@
+{
+    "concept": "Urban Planning (Schools and Commercial)",
+    "workflow_type": "site_suitability",
+    "rules": [
+        "New schools should be located in high-density residential areas.",
+        "Commercial hubs should be placed at the intersection of major transit routes.",
+        "Public facilities must be within walking distance (buffer analysis) of residential populations.",
+        "Avoid hazard-prone areas such as steep slopes or flood zones.",
+        "Noise-sensitive facilities like schools should be buffered from heavy industrial zones."
+    ]
+}

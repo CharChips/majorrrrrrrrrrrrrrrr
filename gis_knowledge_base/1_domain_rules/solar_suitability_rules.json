@@ -1,0 +1,11 @@
+{
+    "concept": "Solar Farm Suitability",
+    "workflow_type": "site_suitability",
+    "rules": [
+        "Prioritize low-slope areas (flat land) to minimize construction costs and maximize incident sunlight.",
+        "Target areas with low vegetation or barren land to avoid environmental impact and clearing costs.",
+        "Proximity to road networks is essential for logistics and connecting to the power grid.",
+        "Avoid water bodies and protected forest zones.",
+        "High elevation is generally preferred if slope is low to minimize atmospheric interference."
+    ]
+}

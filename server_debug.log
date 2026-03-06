@@ -104,3 +104,7 @@
 2026-03-06 02:37:49,242 - server - INFO - DEM MapID success
 2026-03-06 02:37:49,242 - server - INFO - Adding background task: Export DEM to data/pune___pune_city___pune_district___maharashtra_dem.tif
 2026-03-06 02:37:49,243 - server - INFO - Adding background task: Export Slope to data/pune___pune_city___pune_district___maharashtra_slope.tif
+2026-03-06 12:52:28,644 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2026-03-06 12:52:28,665 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2026-03-06 12:52:35,140 - server - INFO - Initializing Earth Engine with project: llm-gis-project
+2026-03-06 12:52:38,570 - server - INFO - EE Initialize successful

@@ -1,5 +1,10 @@
 {
   "title": "Hydrology Rules",
   "description": "Domain rules for hydrological analysis and modeling",
-  "rules": []
+  "rules": [
+    "Flood risk areas are typically found in low-lying regions with high flow accumulation.",
+    "Buffer zones around water bodies are necessary to prevent construction-induced pollution.",
+    "Avoid building critical infrastructure in 100-year floodplains.",
+    "Slope analysis is crucial to determine drainage patterns and potential landslide risks during heavy rainfall."
+  ]
 }

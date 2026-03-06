@@ -1,0 +1,12 @@
+{
+    "concept": "Jogging and Recreational Paths",
+    "workflow_type": "site_suitability",
+    "rules": [
+        "Prefer areas with high vegetation and green cover (parks/forests) for better air quality and environment.",
+        "Target areas with low slope or consistently flat terrain for easier running paths.",
+        "Proximity to residential clusters ensures high accessibility for the local population.",
+        "Avoid high-traffic roads to minimize noise pollution and safety risks; use buffer analysis to stay away from primary arterials.",
+        "Waterfront paths or areas near water bodies are highly preferred for aesthetic and cooling effects.",
+        "Ensure safe land use classifications, focusing on recreational, residential, or public park zones."
+    ]
+}
